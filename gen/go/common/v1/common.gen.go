@@ -18,40 +18,65 @@ func (e Currency) Valid() bool {
 	}
 }
 
-// Currency defines model for Currency.
+// Currency Код валюты ISO 4217.
 type Currency string
 
-// FieldError defines model for FieldError.
+// FieldError Ошибка отдельного поля или недостающего элемента.
 type FieldError struct {
-	Code    *string `json:"code,omitempty"`
-	Field   string  `json:"field"`
-	Message string  `json:"message"`
+	// Code Машинный код ошибки.
+	Code *string `json:"code,omitempty"`
+
+	// Field Путь к полю или элементу
+	Field string `json:"field"`
+
+	// Message Описание ошибки.
+	Message string `json:"message"`
 }
 
-// Money defines model for Money.
+// Money Денежная сумма в минимальных единицах (тиын).
 type Money struct {
 	// AmountMinor Сумма в тиынах.
 	//
 	// Examples: 1500000
-	AmountMinor string   `json:"amount_minor"`
-	Currency    Currency `json:"currency"`
+	AmountMinor string `json:"amount_minor"`
+
+	// Currency Код валюты ISO 4217.
+	Currency Currency `json:"currency"`
 }
 
-// PageInfo defines model for PageInfo.
+// PageInfo Состояние курсорной пагинации.
 type PageInfo struct {
-	HasMore    bool    `json:"has_more"`
+	// HasMore Есть ли следующая страница.
+	HasMore bool `json:"has_more"`
+
+	// NextCursor Курсор следующей страницы.
 	NextCursor *string `json:"next_cursor,omitempty"`
 }
 
 // Problem RFC 9457.
 type Problem struct {
-	Code     *string       `json:"code,omitempty"`
-	Detail   *string       `json:"detail,omitempty"`
-	Errors   *[]FieldError `json:"errors,omitempty"`
-	Instance *string       `json:"instance,omitempty"`
-	Status   int           `json:"status"`
-	Title    string        `json:"title"`
-	Type     string        `json:"type"`
+	// Code Стабильный машинный код для клиентской логики.
+	Code *string `json:"code,omitempty"`
+
+	// Detail Подробности; для 5xx пусто.
+	Detail *string `json:"detail,omitempty"`
+
+	// Errors Ошибки по полям.
+	Errors *[]FieldError `json:"errors,omitempty"`
+
+	// Instance Путь запроса.
+	Instance *string `json:"instance,omitempty"`
+
+	// Status HTTP-статус.
+	Status int `json:"status"`
+
+	// Title Краткое название.
+	Title string `json:"title"`
+
+	// Type URI типа проблемы.
+	//
+	// Examples: about:blank
+	Type string `json:"type"`
 }
 
 // Cursor defines model for Cursor.
@@ -60,5 +85,29 @@ type Cursor = string
 // IdempotencyKey defines model for IdempotencyKey.
 type IdempotencyKey = string
 
+// IfMatch defines model for IfMatch.
+type IfMatch = string
+
 // Limit defines model for Limit.
 type Limit = int
+
+// BadRequest RFC 9457.
+type BadRequest = Problem
+
+// Conflict RFC 9457.
+type Conflict = Problem
+
+// Forbidden RFC 9457.
+type Forbidden = Problem
+
+// NotFound RFC 9457.
+type NotFound = Problem
+
+// PreconditionFailed RFC 9457.
+type PreconditionFailed = Problem
+
+// Unauthorized RFC 9457.
+type Unauthorized = Problem
+
+// Unprocessable RFC 9457.
+type Unprocessable = Problem

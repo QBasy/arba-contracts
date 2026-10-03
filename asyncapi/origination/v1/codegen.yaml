@@ -3,6 +3,7 @@ output: gen/go/origination/events/v1/events.gen.go
 generate:
   models: true
 output-options:
+  skip-prune: true
   type-mapping:
     string:
       formats:

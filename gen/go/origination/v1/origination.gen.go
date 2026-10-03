@@ -164,15 +164,17 @@ func (e Status) Valid() bool {
 	}
 }
 
-// ActorKind defines model for ActorKind.
+// ActorKind Кто совершил действие.
 type ActorKind string
 
-// ApplicantKind defines model for ApplicantKind.
+// ApplicantKind Тип заявителя.
 type ApplicantKind string
 
-// Application defines model for Application.
+// Application Заявка на лизинг.
 type Application struct {
-	ApplicantId   *uuid.UUID     `json:"applicant_id,omitempty"`
+	ApplicantId *uuid.UUID `json:"applicant_id,omitempty"`
+
+	// ApplicantKind Тип заявителя.
 	ApplicantKind *ApplicantKind `json:"applicant_kind,omitempty"`
 	Consents      []Consent      `json:"consents"`
 	ContractId    *uuid.UUID     `json:"contract_id,omitempty"`
@@ -183,92 +185,111 @@ type Application struct {
 	Id            uuid.UUID      `json:"id"`
 
 	// Missing Чего не хватает для отправки на скоринг.
-	Missing   *[]string  `json:"missing,omitempty"`
-	Offer     *Offer     `json:"offer,omitempty"`
+	Missing *[]string `json:"missing,omitempty"`
+
+	// Offer Выпущенный офер.
+	Offer *Offer `json:"offer,omitempty"`
+
+	// Status Статус заявки.
 	Status    Status     `json:"status"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	VehicleId *uuid.UUID `json:"vehicle_id,omitempty"`
 	Version   int64      `json:"version"`
 }
 
-// ApplicationPage defines model for ApplicationPage.
+// ApplicationPage Страница заявок.
 type ApplicationPage struct {
-	Items []Application         `json:"items"`
-	Page  externalRef0.PageInfo `json:"page"`
+	Items []Application `json:"items"`
+
+	// Page Состояние курсорной пагинации.
+	Page externalRef0.PageInfo `json:"page"`
 }
 
-// AttachApplicantRequest defines model for AttachApplicantRequest.
+// AttachApplicantRequest Привязка заявителя.
 type AttachApplicantRequest struct {
-	ApplicantId uuid.UUID     `json:"applicant_id"`
-	Kind        ApplicantKind `json:"kind"`
+	ApplicantId uuid.UUID `json:"applicant_id"`
+
+	// Kind Тип заявителя.
+	Kind ApplicantKind `json:"kind"`
 }
 
-// AttachDocumentRequest defines model for AttachDocumentRequest.
+// AttachDocumentRequest Ссылка на загруженный файл.
 type AttachDocumentRequest struct {
 	FileId uuid.UUID `json:"file_id"`
 }
 
-// CancelRequest defines model for CancelRequest.
+// CancelRequest Причина отмены.
 type CancelRequest struct {
-	Reason *string `json:"reason,omitempty"`
+	Reason string `json:"reason"`
 }
 
-// Consent defines model for Consent.
+// Consent Данное согласие.
 type Consent struct {
-	GrantedAt   time.Time   `json:"granted_at"`
+	GrantedAt time.Time `json:"granted_at"`
+
+	// Kind Вид согласия.
 	Kind        ConsentKind `json:"kind"`
 	TextVersion string      `json:"text_version"`
 }
 
-// ConsentKind defines model for ConsentKind.
+// ConsentKind Вид согласия.
 type ConsentKind string
 
-// Document defines model for Document.
+// Document Приложенный документ.
 type Document struct {
-	AddedAt time.Time    `json:"added_at"`
-	FileId  uuid.UUID    `json:"file_id"`
-	Kind    DocumentKind `json:"kind"`
+	AddedAt time.Time `json:"added_at"`
+	FileId  uuid.UUID `json:"file_id"`
+
+	// Kind Вид документа.
+	Kind DocumentKind `json:"kind"`
 }
 
-// DocumentKind defines model for DocumentKind.
+// DocumentKind Вид документа.
 type DocumentKind string
 
-// GrantConsentRequest defines model for GrantConsentRequest.
+// GrantConsentRequest Данные согласия.
 type GrantConsentRequest struct {
 	TextVersion string `json:"text_version"`
 }
 
-// ManualDecisionRequest defines model for ManualDecisionRequest.
+// ManualDecisionRequest Решение андеррайтера.
 type ManualDecisionRequest struct {
 	DecisionId uuid.UUID `json:"decision_id"`
-	Outcome    Outcome   `json:"outcome"`
-	Reason     string    `json:"reason"`
+
+	// Outcome Решение по заявке.
+	Outcome Outcome `json:"outcome"`
+	Reason  string  `json:"reason"`
 }
 
-// Offer defines model for Offer.
+// Offer Выпущенный офер.
 type Offer struct {
 	ExpiresAt time.Time `json:"expires_at"`
 	Id        uuid.UUID `json:"id"`
 }
 
-// Outcome defines model for Outcome.
+// Outcome Решение по заявке.
 type Outcome string
 
-// SelectVehicleRequest defines model for SelectVehicleRequest.
+// SelectVehicleRequest Выбор автомобиля.
 type SelectVehicleRequest struct {
 	VehicleId uuid.UUID `json:"vehicle_id"`
 }
 
-// Status defines model for Status.
+// Status Статус заявки.
 type Status string
 
-// Transition defines model for Transition.
+// Transition Запись истории переходов статуса.
 type Transition struct {
-	Actor  ActorKind `json:"actor"`
-	At     time.Time `json:"at"`
-	From   Status    `json:"from"`
-	Reason *string   `json:"reason,omitempty"`
-	To     Status    `json:"to"`
+	// Actor Кто совершил действие.
+	Actor ActorKind `json:"actor"`
+	At    time.Time `json:"at"`
+
+	// From Статус заявки.
+	From   Status  `json:"from"`
+	Reason *string `json:"reason,omitempty"`
+
+	// To Статус заявки.
+	To Status `json:"to"`
 }
 
 // ApplicationID defines model for ApplicationID.
@@ -276,34 +297,86 @@ type ApplicationID = uuid.UUID
 
 // ListApplicationsParams defines parameters for ListApplications.
 type ListApplicationsParams struct {
+	// Cursor Курсор из page.next_cursor предыдущего ответа.
 	Cursor *externalRef0.Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
-	Limit  *externalRef0.Limit  `form:"limit,omitempty" json:"limit,omitempty"`
-	Status *Status              `form:"status,omitempty" json:"status,omitempty"`
+
+	// Limit Размер страницы.
+	Limit *externalRef0.Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Status Фильтр по статусу.
+	Status *Status `form:"status,omitempty" json:"status,omitempty"`
 }
 
 // CreateApplicationParams defines parameters for CreateApplication.
 type CreateApplicationParams struct {
+	// IdempotencyKey Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ.
 	IdempotencyKey externalRef0.IdempotencyKey `json:"Idempotency-Key"`
+}
+
+// AttachApplicantParams defines parameters for AttachApplicant.
+type AttachApplicantParams struct {
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
 }
 
 // CancelApplicationParams defines parameters for CancelApplication.
 type CancelApplicationParams struct {
+	// IdempotencyKey Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ.
 	IdempotencyKey externalRef0.IdempotencyKey `json:"Idempotency-Key"`
+
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
+}
+
+// RevokeConsentParams defines parameters for RevokeConsent.
+type RevokeConsentParams struct {
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
+}
+
+// GrantConsentParams defines parameters for GrantConsent.
+type GrantConsentParams struct {
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
+}
+
+// AttachDocumentParams defines parameters for AttachDocument.
+type AttachDocumentParams struct {
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
 }
 
 // ResolveManualReviewParams defines parameters for ResolveManualReview.
 type ResolveManualReviewParams struct {
+	// IdempotencyKey Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ.
 	IdempotencyKey externalRef0.IdempotencyKey `json:"Idempotency-Key"`
+
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
 }
 
 // AcceptOfferParams defines parameters for AcceptOffer.
 type AcceptOfferParams struct {
+	// IdempotencyKey Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ.
 	IdempotencyKey externalRef0.IdempotencyKey `json:"Idempotency-Key"`
+
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
 }
 
 // SubmitApplicationParams defines parameters for SubmitApplication.
 type SubmitApplicationParams struct {
+	// IdempotencyKey Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ.
 	IdempotencyKey externalRef0.IdempotencyKey `json:"Idempotency-Key"`
+
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
+}
+
+// SelectVehicleParams defines parameters for SelectVehicle.
+type SelectVehicleParams struct {
+	// IfMatch Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
 }
 
 // AttachApplicantJSONRequestBody defines body for AttachApplicant for application/json ContentType.
@@ -398,78 +471,162 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 
-	// ListApplications performs a GET /v1/applications (the `ListApplications` operationId) request.
+	// ListApplications Список заявок
+	//
+	// Заявки тенанта, новые первыми; пагинация курсором.
+	//
+	// Corresponds with GET /v1/applications (the `ListApplications` operationId).
 	ListApplications(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// CreateApplication performs a POST /v1/applications (the `CreateApplication` operationId) request.
+	// CreateApplication Создать черновик
+	//
+	// Создаёт пустой черновик заявки для тенанта из токена.
+	//
+	// Corresponds with POST /v1/applications (the `CreateApplication` operationId).
 	CreateApplication(ctx context.Context, params *CreateApplicationParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApplication performs a GET /v1/applications/{id} (the `GetApplication` operationId) request.
+	// GetApplication Получить заявку
+	//
+	// Текущее состояние заявки, включая историю переходов.
+	//
+	// Corresponds with GET /v1/applications/{id} (the `GetApplication` operationId).
 	GetApplication(ctx context.Context, id ApplicationID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AttachApplicantWithBody performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request,
-	// with any type of body and a specified content type.
-	AttachApplicantWithBody(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// AttachApplicantWithBody Указать заявителя
+	//
+	// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+	AttachApplicantWithBody(ctx context.Context, id ApplicationID, params *AttachApplicantParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AttachApplicant performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request.
+	// AttachApplicant Указать заявителя
+	//
+	// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+	//
 	// Takes a body of the `application/json` content type.
-	AttachApplicant(ctx context.Context, id ApplicationID, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	//
+	// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+	AttachApplicant(ctx context.Context, id ApplicationID, params *AttachApplicantParams, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// CancelApplicationWithBody performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request,
-	// with any type of body and a specified content type.
+	// CancelApplicationWithBody Отменить заявку
+	//
+	// Отмена клиентом или сотрудником из любого нетерминального статуса.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 	CancelApplicationWithBody(ctx context.Context, id ApplicationID, params *CancelApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// CancelApplication performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request.
+	// CancelApplication Отменить заявку
+	//
+	// Отмена клиентом или сотрудником из любого нетерминального статуса.
+	//
 	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 	CancelApplication(ctx context.Context, id ApplicationID, params *CancelApplicationParams, body CancelApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// RevokeConsent performs a DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId) request.
-	RevokeConsent(ctx context.Context, id ApplicationID, kind ConsentKind, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GrantConsentWithBody performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request,
-	// with any type of body and a specified content type.
-	GrantConsentWithBody(ctx context.Context, id ApplicationID, kind ConsentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GrantConsent performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request.
-	// Takes a body of the `application/json` content type.
-	GrantConsent(ctx context.Context, id ApplicationID, kind ConsentKind, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// AttachDocumentWithBody performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request,
-	// with any type of body and a specified content type.
-	AttachDocumentWithBody(ctx context.Context, id ApplicationID, kind DocumentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// AttachDocument performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request.
-	// Takes a body of the `application/json` content type.
-	AttachDocument(ctx context.Context, id ApplicationID, kind DocumentKind, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// ResolveManualReviewWithBody performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request,
-	// with any type of body and a specified content type.
+	// RevokeConsent Отозвать согласие
 	//
-	// Только роль underwriter.
+	// Доступно только в статусе draft.
+	//
+	// Corresponds with DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId).
+	RevokeConsent(ctx context.Context, id ApplicationID, kind ConsentKind, params *RevokeConsentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GrantConsentWithBody Дать согласие
+	//
+	// Шаг 3. Фиксирует версию текста согласия.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+	GrantConsentWithBody(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GrantConsent Дать согласие
+	//
+	// Шаг 3. Фиксирует версию текста согласия.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+	GrantConsent(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AttachDocumentWithBody Приложить документ
+	//
+	// Шаг 4. Файл должен быть заранее загружен в files.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+	AttachDocumentWithBody(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AttachDocument Приложить документ
+	//
+	// Шаг 4. Файл должен быть заранее загружен в files.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+	AttachDocument(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ResolveManualReviewWithBody Ручное решение
+	//
+	// Решение андеррайтера по заявке в статусе manual_review.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 	ResolveManualReviewWithBody(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ResolveManualReview performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request.
+	// ResolveManualReview Ручное решение
+	//
+	// Решение андеррайтера по заявке в статусе manual_review.
+	//
 	// Takes a body of the `application/json` content type.
 	//
-	// Только роль underwriter.
+	// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 	ResolveManualReview(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, body ResolveManualReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AcceptOffer performs a POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId) request.
+	// AcceptOffer Принять офер
+	//
+	// Доступно клиенту, пока офер не истёк.
+	//
+	// Corresponds with POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId).
 	AcceptOffer(ctx context.Context, id ApplicationID, params *AcceptOfferParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// SubmitApplication performs a POST /v1/applications/{id}/submit (the `SubmitApplication` operationId) request.
+	// SubmitApplication Отправить на скоринг
+	//
+	// Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
+	//
+	// Corresponds with POST /v1/applications/{id}/submit (the `SubmitApplication` operationId).
 	SubmitApplication(ctx context.Context, id ApplicationID, params *SubmitApplicationParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// SelectVehicleWithBody performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request,
-	// with any type of body and a specified content type.
-	SelectVehicleWithBody(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// SelectVehicleWithBody Выбрать автомобиль
+	//
+	// Шаг 1. Доступно только в статусе draft.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+	SelectVehicleWithBody(ctx context.Context, id ApplicationID, params *SelectVehicleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// SelectVehicle performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request.
+	// SelectVehicle Выбрать автомобиль
+	//
+	// Шаг 1. Доступно только в статусе draft.
+	//
 	// Takes a body of the `application/json` content type.
-	SelectVehicle(ctx context.Context, id ApplicationID, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	//
+	// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+	SelectVehicle(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-// ListApplications performs a GET /v1/applications (the `ListApplications` operationId) request.
+// ListApplications Список заявок
+//
+// Заявки тенанта, новые первыми; пагинация курсором.
+//
+// Corresponds with GET /v1/applications (the `ListApplications` operationId).
 func (c *Client) ListApplications(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListApplicationsRequest(c.Server, params)
 	if err != nil {
@@ -482,7 +639,11 @@ func (c *Client) ListApplications(ctx context.Context, params *ListApplicationsP
 	return c.Client.Do(req)
 }
 
-// CreateApplication performs a POST /v1/applications (the `CreateApplication` operationId) request.
+// CreateApplication Создать черновик
+//
+// Создаёт пустой черновик заявки для тенанта из токена.
+//
+// Corresponds with POST /v1/applications (the `CreateApplication` operationId).
 func (c *Client) CreateApplication(ctx context.Context, params *CreateApplicationParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateApplicationRequest(c.Server, params)
 	if err != nil {
@@ -495,7 +656,11 @@ func (c *Client) CreateApplication(ctx context.Context, params *CreateApplicatio
 	return c.Client.Do(req)
 }
 
-// GetApplication performs a GET /v1/applications/{id} (the `GetApplication` operationId) request.
+// GetApplication Получить заявку
+//
+// Текущее состояние заявки, включая историю переходов.
+//
+// Corresponds with GET /v1/applications/{id} (the `GetApplication` operationId).
 func (c *Client) GetApplication(ctx context.Context, id ApplicationID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApplicationRequest(c.Server, id)
 	if err != nil {
@@ -508,10 +673,15 @@ func (c *Client) GetApplication(ctx context.Context, id ApplicationID, reqEditor
 	return c.Client.Do(req)
 }
 
-// AttachApplicantWithBody performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request,
-// with any type of body and a specified content type.
-func (c *Client) AttachApplicantWithBody(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAttachApplicantRequestWithBody(c.Server, id, contentType, body)
+// AttachApplicantWithBody Указать заявителя
+//
+// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+func (c *Client) AttachApplicantWithBody(ctx context.Context, id ApplicationID, params *AttachApplicantParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAttachApplicantRequestWithBody(c.Server, id, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -522,10 +692,15 @@ func (c *Client) AttachApplicantWithBody(ctx context.Context, id ApplicationID, 
 	return c.Client.Do(req)
 }
 
-// AttachApplicant performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request.
+// AttachApplicant Указать заявителя
+//
+// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+//
 // Takes a body of the `application/json` content type.
-func (c *Client) AttachApplicant(ctx context.Context, id ApplicationID, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAttachApplicantRequest(c.Server, id, body)
+//
+// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+func (c *Client) AttachApplicant(ctx context.Context, id ApplicationID, params *AttachApplicantParams, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAttachApplicantRequest(c.Server, id, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -536,8 +711,13 @@ func (c *Client) AttachApplicant(ctx context.Context, id ApplicationID, body Att
 	return c.Client.Do(req)
 }
 
-// CancelApplicationWithBody performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request,
-// with any type of body and a specified content type.
+// CancelApplicationWithBody Отменить заявку
+//
+// Отмена клиентом или сотрудником из любого нетерминального статуса.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 func (c *Client) CancelApplicationWithBody(ctx context.Context, id ApplicationID, params *CancelApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCancelApplicationRequestWithBody(c.Server, id, params, contentType, body)
 	if err != nil {
@@ -550,8 +730,13 @@ func (c *Client) CancelApplicationWithBody(ctx context.Context, id ApplicationID
 	return c.Client.Do(req)
 }
 
-// CancelApplication performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request.
+// CancelApplication Отменить заявку
+//
+// Отмена клиентом или сотрудником из любого нетерминального статуса.
+//
 // Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 func (c *Client) CancelApplication(ctx context.Context, id ApplicationID, params *CancelApplicationParams, body CancelApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCancelApplicationRequest(c.Server, id, params, body)
 	if err != nil {
@@ -564,79 +749,106 @@ func (c *Client) CancelApplication(ctx context.Context, id ApplicationID, params
 	return c.Client.Do(req)
 }
 
-// RevokeConsent performs a DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId) request.
-func (c *Client) RevokeConsent(ctx context.Context, id ApplicationID, kind ConsentKind, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRevokeConsentRequest(c.Server, id, kind)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GrantConsentWithBody performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request,
-// with any type of body and a specified content type.
-func (c *Client) GrantConsentWithBody(ctx context.Context, id ApplicationID, kind ConsentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGrantConsentRequestWithBody(c.Server, id, kind, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GrantConsent performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request.
-// Takes a body of the `application/json` content type.
-func (c *Client) GrantConsent(ctx context.Context, id ApplicationID, kind ConsentKind, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGrantConsentRequest(c.Server, id, kind, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// AttachDocumentWithBody performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request,
-// with any type of body and a specified content type.
-func (c *Client) AttachDocumentWithBody(ctx context.Context, id ApplicationID, kind DocumentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAttachDocumentRequestWithBody(c.Server, id, kind, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// AttachDocument performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request.
-// Takes a body of the `application/json` content type.
-func (c *Client) AttachDocument(ctx context.Context, id ApplicationID, kind DocumentKind, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAttachDocumentRequest(c.Server, id, kind, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// ResolveManualReviewWithBody performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request,
-// with any type of body and a specified content type.
+// RevokeConsent Отозвать согласие
 //
-// Только роль underwriter.
+// Доступно только в статусе draft.
+//
+// Corresponds with DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId).
+func (c *Client) RevokeConsent(ctx context.Context, id ApplicationID, kind ConsentKind, params *RevokeConsentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokeConsentRequest(c.Server, id, kind, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GrantConsentWithBody Дать согласие
+//
+// Шаг 3. Фиксирует версию текста согласия.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+func (c *Client) GrantConsentWithBody(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGrantConsentRequestWithBody(c.Server, id, kind, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GrantConsent Дать согласие
+//
+// Шаг 3. Фиксирует версию текста согласия.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+func (c *Client) GrantConsent(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGrantConsentRequest(c.Server, id, kind, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AttachDocumentWithBody Приложить документ
+//
+// Шаг 4. Файл должен быть заранее загружен в files.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+func (c *Client) AttachDocumentWithBody(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAttachDocumentRequestWithBody(c.Server, id, kind, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AttachDocument Приложить документ
+//
+// Шаг 4. Файл должен быть заранее загружен в files.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+func (c *Client) AttachDocument(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAttachDocumentRequest(c.Server, id, kind, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ResolveManualReviewWithBody Ручное решение
+//
+// Решение андеррайтера по заявке в статусе manual_review.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 func (c *Client) ResolveManualReviewWithBody(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewResolveManualReviewRequestWithBody(c.Server, id, params, contentType, body)
 	if err != nil {
@@ -649,10 +861,13 @@ func (c *Client) ResolveManualReviewWithBody(ctx context.Context, id Application
 	return c.Client.Do(req)
 }
 
-// ResolveManualReview performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request.
+// ResolveManualReview Ручное решение
+//
+// Решение андеррайтера по заявке в статусе manual_review.
+//
 // Takes a body of the `application/json` content type.
 //
-// Только роль underwriter.
+// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 func (c *Client) ResolveManualReview(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, body ResolveManualReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewResolveManualReviewRequest(c.Server, id, params, body)
 	if err != nil {
@@ -665,7 +880,11 @@ func (c *Client) ResolveManualReview(ctx context.Context, id ApplicationID, para
 	return c.Client.Do(req)
 }
 
-// AcceptOffer performs a POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId) request.
+// AcceptOffer Принять офер
+//
+// Доступно клиенту, пока офер не истёк.
+//
+// Corresponds with POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId).
 func (c *Client) AcceptOffer(ctx context.Context, id ApplicationID, params *AcceptOfferParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAcceptOfferRequest(c.Server, id, params)
 	if err != nil {
@@ -678,7 +897,11 @@ func (c *Client) AcceptOffer(ctx context.Context, id ApplicationID, params *Acce
 	return c.Client.Do(req)
 }
 
-// SubmitApplication performs a POST /v1/applications/{id}/submit (the `SubmitApplication` operationId) request.
+// SubmitApplication Отправить на скоринг
+//
+// Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
+//
+// Corresponds with POST /v1/applications/{id}/submit (the `SubmitApplication` operationId).
 func (c *Client) SubmitApplication(ctx context.Context, id ApplicationID, params *SubmitApplicationParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSubmitApplicationRequest(c.Server, id, params)
 	if err != nil {
@@ -691,10 +914,15 @@ func (c *Client) SubmitApplication(ctx context.Context, id ApplicationID, params
 	return c.Client.Do(req)
 }
 
-// SelectVehicleWithBody performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request,
-// with any type of body and a specified content type.
-func (c *Client) SelectVehicleWithBody(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSelectVehicleRequestWithBody(c.Server, id, contentType, body)
+// SelectVehicleWithBody Выбрать автомобиль
+//
+// Шаг 1. Доступно только в статусе draft.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+func (c *Client) SelectVehicleWithBody(ctx context.Context, id ApplicationID, params *SelectVehicleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSelectVehicleRequestWithBody(c.Server, id, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -705,10 +933,15 @@ func (c *Client) SelectVehicleWithBody(ctx context.Context, id ApplicationID, co
 	return c.Client.Do(req)
 }
 
-// SelectVehicle performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request.
+// SelectVehicle Выбрать автомобиль
+//
+// Шаг 1. Доступно только в статусе draft.
+//
 // Takes a body of the `application/json` content type.
-func (c *Client) SelectVehicle(ctx context.Context, id ApplicationID, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSelectVehicleRequest(c.Server, id, body)
+//
+// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+func (c *Client) SelectVehicle(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSelectVehicleRequest(c.Server, id, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -872,18 +1105,18 @@ func NewGetApplicationRequest(server string, id ApplicationID) (*http.Request, e
 }
 
 // NewAttachApplicantRequest calls the generic AttachApplicant builder with application/json body
-func NewAttachApplicantRequest(server string, id ApplicationID, body AttachApplicantJSONRequestBody) (*http.Request, error) {
+func NewAttachApplicantRequest(server string, id ApplicationID, params *AttachApplicantParams, body AttachApplicantJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewAttachApplicantRequestWithBody(server, id, "application/json", bodyReader)
+	return NewAttachApplicantRequestWithBody(server, id, params, "application/json", bodyReader)
 }
 
 // NewAttachApplicantRequestWithBody constructs an http.Request for the AttachApplicant method, with any body, and a specified content type
-func NewAttachApplicantRequestWithBody(server string, id ApplicationID, contentType string, body io.Reader) (*http.Request, error) {
+func NewAttachApplicantRequestWithBody(server string, id ApplicationID, params *AttachApplicantParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -914,6 +1147,21 @@ func NewAttachApplicantRequestWithBody(server string, id ApplicationID, contentT
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -973,13 +1221,24 @@ func NewCancelApplicationRequestWithBody(server string, id ApplicationID, params
 
 		req.Header.Set("Idempotency-Key", headerParam0)
 
+		if params.IfMatch != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam1)
+		}
+
 	}
 
 	return req, nil
 }
 
 // NewRevokeConsentRequest constructs an http.Request for the RevokeConsent method
-func NewRevokeConsentRequest(server string, id ApplicationID, kind ConsentKind) (*http.Request, error) {
+func NewRevokeConsentRequest(server string, id ApplicationID, kind ConsentKind, params *RevokeConsentParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1016,22 +1275,37 @@ func NewRevokeConsentRequest(server string, id ApplicationID, kind ConsentKind) 
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewGrantConsentRequest calls the generic GrantConsent builder with application/json body
-func NewGrantConsentRequest(server string, id ApplicationID, kind ConsentKind, body GrantConsentJSONRequestBody) (*http.Request, error) {
+func NewGrantConsentRequest(server string, id ApplicationID, kind ConsentKind, params *GrantConsentParams, body GrantConsentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewGrantConsentRequestWithBody(server, id, kind, "application/json", bodyReader)
+	return NewGrantConsentRequestWithBody(server, id, kind, params, "application/json", bodyReader)
 }
 
 // NewGrantConsentRequestWithBody constructs an http.Request for the GrantConsent method, with any body, and a specified content type
-func NewGrantConsentRequestWithBody(server string, id ApplicationID, kind ConsentKind, contentType string, body io.Reader) (*http.Request, error) {
+func NewGrantConsentRequestWithBody(server string, id ApplicationID, kind ConsentKind, params *GrantConsentParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1070,22 +1344,37 @@ func NewGrantConsentRequestWithBody(server string, id ApplicationID, kind Consen
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewAttachDocumentRequest calls the generic AttachDocument builder with application/json body
-func NewAttachDocumentRequest(server string, id ApplicationID, kind DocumentKind, body AttachDocumentJSONRequestBody) (*http.Request, error) {
+func NewAttachDocumentRequest(server string, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, body AttachDocumentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewAttachDocumentRequestWithBody(server, id, kind, "application/json", bodyReader)
+	return NewAttachDocumentRequestWithBody(server, id, kind, params, "application/json", bodyReader)
 }
 
 // NewAttachDocumentRequestWithBody constructs an http.Request for the AttachDocument method, with any body, and a specified content type
-func NewAttachDocumentRequestWithBody(server string, id ApplicationID, kind DocumentKind, contentType string, body io.Reader) (*http.Request, error) {
+func NewAttachDocumentRequestWithBody(server string, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1123,6 +1412,21 @@ func NewAttachDocumentRequestWithBody(server string, id ApplicationID, kind Docu
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -1182,6 +1486,17 @@ func NewResolveManualReviewRequestWithBody(server string, id ApplicationID, para
 
 		req.Header.Set("Idempotency-Key", headerParam0)
 
+		if params.IfMatch != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam1)
+		}
+
 	}
 
 	return req, nil
@@ -1228,6 +1543,17 @@ func NewAcceptOfferRequest(server string, id ApplicationID, params *AcceptOfferP
 		}
 
 		req.Header.Set("Idempotency-Key", headerParam0)
+
+		if params.IfMatch != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam1)
+		}
 
 	}
 
@@ -1276,24 +1602,35 @@ func NewSubmitApplicationRequest(server string, id ApplicationID, params *Submit
 
 		req.Header.Set("Idempotency-Key", headerParam0)
 
+		if params.IfMatch != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam1)
+		}
+
 	}
 
 	return req, nil
 }
 
 // NewSelectVehicleRequest calls the generic SelectVehicle builder with application/json body
-func NewSelectVehicleRequest(server string, id ApplicationID, body SelectVehicleJSONRequestBody) (*http.Request, error) {
+func NewSelectVehicleRequest(server string, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewSelectVehicleRequestWithBody(server, id, "application/json", bodyReader)
+	return NewSelectVehicleRequestWithBody(server, id, params, "application/json", bodyReader)
 }
 
 // NewSelectVehicleRequestWithBody constructs an http.Request for the SelectVehicle method, with any body, and a specified content type
-func NewSelectVehicleRequestWithBody(server string, id ApplicationID, contentType string, body io.Reader) (*http.Request, error) {
+func NewSelectVehicleRequestWithBody(server string, id ApplicationID, params *SelectVehicleParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1324,6 +1661,21 @@ func NewSelectVehicleRequestWithBody(server string, id ApplicationID, contentTyp
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -1372,99 +1724,187 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
-	// ListApplicationsWithResponse performs a GET /v1/applications (the `ListApplications` operationId) request.
+	// ListApplicationsWithResponse Список заявок
+	//
+	// Заявки тенанта, новые первыми; пагинация курсором.
 	//
 	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/applications (the `ListApplications` operationId).
 	ListApplicationsWithResponse(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*ListApplicationsResponse, error)
 
-	// CreateApplicationWithResponse performs a POST /v1/applications (the `CreateApplication` operationId) request.
+	// CreateApplicationWithResponse Создать черновик
+	//
+	// Создаёт пустой черновик заявки для тенанта из токена.
 	//
 	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/applications (the `CreateApplication` operationId).
 	CreateApplicationWithResponse(ctx context.Context, params *CreateApplicationParams, reqEditors ...RequestEditorFn) (*CreateApplicationResponse, error)
 
-	// GetApplicationWithResponse performs a GET /v1/applications/{id} (the `GetApplication` operationId) request.
+	// GetApplicationWithResponse Получить заявку
+	//
+	// Текущее состояние заявки, включая историю переходов.
 	//
 	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/applications/{id} (the `GetApplication` operationId).
 	GetApplicationWithResponse(ctx context.Context, id ApplicationID, reqEditors ...RequestEditorFn) (*GetApplicationResponse, error)
 
-	// AttachApplicantWithBodyWithResponse performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request,
-	// with any type of body and a specified content type.
+	// AttachApplicantWithBodyWithResponse Указать заявителя
 	//
-	// Returns a wrapper object for the known response body format(s).
-	AttachApplicantWithBodyWithResponse(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error)
+	// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+	AttachApplicantWithBodyWithResponse(ctx context.Context, id ApplicationID, params *AttachApplicantParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error)
 
-	// AttachApplicantWithResponse performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request.
+	// AttachApplicantWithResponse Указать заявителя
+	//
+	// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	AttachApplicantWithResponse(ctx context.Context, id ApplicationID, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error)
-
-	// CancelApplicationWithBodyWithResponse performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request,
-	// with any type of body and a specified content type.
 	//
-	// Returns a wrapper object for the known response body format(s).
+	// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+	AttachApplicantWithResponse(ctx context.Context, id ApplicationID, params *AttachApplicantParams, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error)
+
+	// CancelApplicationWithBodyWithResponse Отменить заявку
+	//
+	// Отмена клиентом или сотрудником из любого нетерминального статуса.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 	CancelApplicationWithBodyWithResponse(ctx context.Context, id ApplicationID, params *CancelApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CancelApplicationResponse, error)
 
-	// CancelApplicationWithResponse performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request.
+	// CancelApplicationWithResponse Отменить заявку
+	//
+	// Отмена клиентом или сотрудником из любого нетерминального статуса.
+	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 	CancelApplicationWithResponse(ctx context.Context, id ApplicationID, params *CancelApplicationParams, body CancelApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*CancelApplicationResponse, error)
 
-	// RevokeConsentWithResponse performs a DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId) request.
+	// RevokeConsentWithResponse Отозвать согласие
+	//
+	// Доступно только в статусе draft.
 	//
 	// Returns a wrapper object for the known response body format(s).
-	RevokeConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, reqEditors ...RequestEditorFn) (*RevokeConsentResponse, error)
-
-	// GrantConsentWithBodyWithResponse performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request,
-	// with any type of body and a specified content type.
 	//
-	// Returns a wrapper object for the known response body format(s).
-	GrantConsentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error)
+	// Corresponds with DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId).
+	RevokeConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, params *RevokeConsentParams, reqEditors ...RequestEditorFn) (*RevokeConsentResponse, error)
 
-	// GrantConsentWithResponse performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request.
+	// GrantConsentWithBodyWithResponse Дать согласие
+	//
+	// Шаг 3. Фиксирует версию текста согласия.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+	GrantConsentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error)
+
+	// GrantConsentWithResponse Дать согласие
+	//
+	// Шаг 3. Фиксирует версию текста согласия.
+	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	GrantConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error)
-
-	// AttachDocumentWithBodyWithResponse performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request,
-	// with any type of body and a specified content type.
 	//
-	// Returns a wrapper object for the known response body format(s).
-	AttachDocumentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error)
+	// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+	GrantConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error)
 
-	// AttachDocumentWithResponse performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request.
+	// AttachDocumentWithBodyWithResponse Приложить документ
+	//
+	// Шаг 4. Файл должен быть заранее загружен в files.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+	AttachDocumentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error)
+
+	// AttachDocumentWithResponse Приложить документ
+	//
+	// Шаг 4. Файл должен быть заранее загружен в files.
+	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	AttachDocumentWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error)
+	//
+	// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+	AttachDocumentWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error)
 
-	// ResolveManualReviewWithBodyWithResponse performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request,
-	// with any type of body and a specified content type.
+	// ResolveManualReviewWithBodyWithResponse Ручное решение
 	//
-	// Только роль underwriter.
+	// Решение андеррайтера по заявке в статусе manual_review.
 	//
-	// Returns a wrapper object for the known response body format(s).
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 	ResolveManualReviewWithBodyWithResponse(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ResolveManualReviewResponse, error)
 
-	// ResolveManualReviewWithResponse performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request.
+	// ResolveManualReviewWithResponse Ручное решение
+	//
+	// Решение андеррайтера по заявке в статусе manual_review.
+	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
-	// Только роль underwriter.
+	// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 	ResolveManualReviewWithResponse(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, body ResolveManualReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*ResolveManualReviewResponse, error)
 
-	// AcceptOfferWithResponse performs a POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId) request.
+	// AcceptOfferWithResponse Принять офер
+	//
+	// Доступно клиенту, пока офер не истёк.
 	//
 	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId).
 	AcceptOfferWithResponse(ctx context.Context, id ApplicationID, params *AcceptOfferParams, reqEditors ...RequestEditorFn) (*AcceptOfferResponse, error)
 
-	// SubmitApplicationWithResponse performs a POST /v1/applications/{id}/submit (the `SubmitApplication` operationId) request.
+	// SubmitApplicationWithResponse Отправить на скоринг
+	//
+	// Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
 	//
 	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/applications/{id}/submit (the `SubmitApplication` operationId).
 	SubmitApplicationWithResponse(ctx context.Context, id ApplicationID, params *SubmitApplicationParams, reqEditors ...RequestEditorFn) (*SubmitApplicationResponse, error)
 
-	// SelectVehicleWithBodyWithResponse performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request,
-	// with any type of body and a specified content type.
+	// SelectVehicleWithBodyWithResponse Выбрать автомобиль
 	//
-	// Returns a wrapper object for the known response body format(s).
-	SelectVehicleWithBodyWithResponse(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error)
+	// Шаг 1. Доступно только в статусе draft.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+	SelectVehicleWithBodyWithResponse(ctx context.Context, id ApplicationID, params *SelectVehicleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error)
 
-	// SelectVehicleWithResponse performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request.
+	// SelectVehicleWithResponse Выбрать автомобиль
+	//
+	// Шаг 1. Доступно только в статусе draft.
+	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	SelectVehicleWithResponse(ctx context.Context, id ApplicationID, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error)
+	//
+	// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+	SelectVehicleWithResponse(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error)
+}
+
+// ListApplicationsResponse400Headers the declared response headers of an HTTP 400 response for ListApplications
+type ListApplicationsResponse400Headers struct {
+	XRequestID *string
+}
+
+// ListApplicationsResponse401Headers the declared response headers of an HTTP 401 response for ListApplications
+type ListApplicationsResponse401Headers struct {
+	XRequestID *string
+}
+
+// ListApplicationsResponse403Headers the declared response headers of an HTTP 403 response for ListApplications
+type ListApplicationsResponse403Headers struct {
+	XRequestID *string
+}
+
+// ListApplicationsResponseDefaultHeaders the declared response headers of an HTTP default response for ListApplications
+type ListApplicationsResponseDefaultHeaders struct {
+	XRequestID *string
 }
 
 type ListApplicationsResponse struct {
@@ -1472,13 +1912,42 @@ type ListApplicationsResponse struct {
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *ApplicationPage
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *ListApplicationsResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *ListApplicationsResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *ListApplicationsResponse403Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *ListApplicationsResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r ListApplicationsResponse) GetJSON200() *ApplicationPage {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r ListApplicationsResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r ListApplicationsResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r ListApplicationsResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1515,18 +1984,102 @@ func (r ListApplicationsResponse) ContentType() string {
 	return ""
 }
 
+// CreateApplicationResponse201Headers the declared response headers of an HTTP 201 response for CreateApplication
+type CreateApplicationResponse201Headers struct {
+	ETag *string
+}
+
+// CreateApplicationResponse400Headers the declared response headers of an HTTP 400 response for CreateApplication
+type CreateApplicationResponse400Headers struct {
+	XRequestID *string
+}
+
+// CreateApplicationResponse401Headers the declared response headers of an HTTP 401 response for CreateApplication
+type CreateApplicationResponse401Headers struct {
+	XRequestID *string
+}
+
+// CreateApplicationResponse403Headers the declared response headers of an HTTP 403 response for CreateApplication
+type CreateApplicationResponse403Headers struct {
+	XRequestID *string
+}
+
+// CreateApplicationResponse409Headers the declared response headers of an HTTP 409 response for CreateApplication
+type CreateApplicationResponse409Headers struct {
+	XRequestID *string
+}
+
+// CreateApplicationResponse422Headers the declared response headers of an HTTP 422 response for CreateApplication
+type CreateApplicationResponse422Headers struct {
+	XRequestID *string
+}
+
+// CreateApplicationResponseDefaultHeaders the declared response headers of an HTTP default response for CreateApplication
+type CreateApplicationResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type CreateApplicationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON201 the response for an HTTP 201 `application/json` response
 	JSON201 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers201 the parsed response headers for an HTTP 201 response
+	Headers201 *CreateApplicationResponse201Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *CreateApplicationResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *CreateApplicationResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *CreateApplicationResponse403Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *CreateApplicationResponse409Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *CreateApplicationResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *CreateApplicationResponseDefaultHeaders
 }
 
 // GetJSON201 returns the response for an HTTP 201 `application/json` response
 func (r CreateApplicationResponse) GetJSON201() *Application {
 	return r.JSON201
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r CreateApplicationResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r CreateApplicationResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r CreateApplicationResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r CreateApplicationResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r CreateApplicationResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1563,18 +2116,74 @@ func (r CreateApplicationResponse) ContentType() string {
 	return ""
 }
 
+// GetApplicationResponse200Headers the declared response headers of an HTTP 200 response for GetApplication
+type GetApplicationResponse200Headers struct {
+	ETag *string
+}
+
+// GetApplicationResponse401Headers the declared response headers of an HTTP 401 response for GetApplication
+type GetApplicationResponse401Headers struct {
+	XRequestID *string
+}
+
+// GetApplicationResponse403Headers the declared response headers of an HTTP 403 response for GetApplication
+type GetApplicationResponse403Headers struct {
+	XRequestID *string
+}
+
+// GetApplicationResponse404Headers the declared response headers of an HTTP 404 response for GetApplication
+type GetApplicationResponse404Headers struct {
+	XRequestID *string
+}
+
+// GetApplicationResponseDefaultHeaders the declared response headers of an HTTP default response for GetApplication
+type GetApplicationResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type GetApplicationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetApplicationResponse200Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *GetApplicationResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *GetApplicationResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *GetApplicationResponse404Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *GetApplicationResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r GetApplicationResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r GetApplicationResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r GetApplicationResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r GetApplicationResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1611,18 +2220,130 @@ func (r GetApplicationResponse) ContentType() string {
 	return ""
 }
 
+// AttachApplicantResponse200Headers the declared response headers of an HTTP 200 response for AttachApplicant
+type AttachApplicantResponse200Headers struct {
+	ETag *string
+}
+
+// AttachApplicantResponse400Headers the declared response headers of an HTTP 400 response for AttachApplicant
+type AttachApplicantResponse400Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponse401Headers the declared response headers of an HTTP 401 response for AttachApplicant
+type AttachApplicantResponse401Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponse403Headers the declared response headers of an HTTP 403 response for AttachApplicant
+type AttachApplicantResponse403Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponse404Headers the declared response headers of an HTTP 404 response for AttachApplicant
+type AttachApplicantResponse404Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponse409Headers the declared response headers of an HTTP 409 response for AttachApplicant
+type AttachApplicantResponse409Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponse412Headers the declared response headers of an HTTP 412 response for AttachApplicant
+type AttachApplicantResponse412Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponse422Headers the declared response headers of an HTTP 422 response for AttachApplicant
+type AttachApplicantResponse422Headers struct {
+	XRequestID *string
+}
+
+// AttachApplicantResponseDefaultHeaders the declared response headers of an HTTP default response for AttachApplicant
+type AttachApplicantResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type AttachApplicantResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *AttachApplicantResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AttachApplicantResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AttachApplicantResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AttachApplicantResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *AttachApplicantResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *AttachApplicantResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *AttachApplicantResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *AttachApplicantResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *AttachApplicantResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r AttachApplicantResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r AttachApplicantResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1659,18 +2380,116 @@ func (r AttachApplicantResponse) ContentType() string {
 	return ""
 }
 
+// CancelApplicationResponse200Headers the declared response headers of an HTTP 200 response for CancelApplication
+type CancelApplicationResponse200Headers struct {
+	ETag *string
+}
+
+// CancelApplicationResponse400Headers the declared response headers of an HTTP 400 response for CancelApplication
+type CancelApplicationResponse400Headers struct {
+	XRequestID *string
+}
+
+// CancelApplicationResponse401Headers the declared response headers of an HTTP 401 response for CancelApplication
+type CancelApplicationResponse401Headers struct {
+	XRequestID *string
+}
+
+// CancelApplicationResponse403Headers the declared response headers of an HTTP 403 response for CancelApplication
+type CancelApplicationResponse403Headers struct {
+	XRequestID *string
+}
+
+// CancelApplicationResponse404Headers the declared response headers of an HTTP 404 response for CancelApplication
+type CancelApplicationResponse404Headers struct {
+	XRequestID *string
+}
+
+// CancelApplicationResponse409Headers the declared response headers of an HTTP 409 response for CancelApplication
+type CancelApplicationResponse409Headers struct {
+	XRequestID *string
+}
+
+// CancelApplicationResponse412Headers the declared response headers of an HTTP 412 response for CancelApplication
+type CancelApplicationResponse412Headers struct {
+	XRequestID *string
+}
+
+// CancelApplicationResponseDefaultHeaders the declared response headers of an HTTP default response for CancelApplication
+type CancelApplicationResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type CancelApplicationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *CancelApplicationResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *CancelApplicationResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *CancelApplicationResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *CancelApplicationResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *CancelApplicationResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *CancelApplicationResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *CancelApplicationResponse412Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *CancelApplicationResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r CancelApplicationResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r CancelApplicationResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r CancelApplicationResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r CancelApplicationResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r CancelApplicationResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r CancelApplicationResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r CancelApplicationResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1707,18 +2526,102 @@ func (r CancelApplicationResponse) ContentType() string {
 	return ""
 }
 
+// RevokeConsentResponse200Headers the declared response headers of an HTTP 200 response for RevokeConsent
+type RevokeConsentResponse200Headers struct {
+	ETag *string
+}
+
+// RevokeConsentResponse401Headers the declared response headers of an HTTP 401 response for RevokeConsent
+type RevokeConsentResponse401Headers struct {
+	XRequestID *string
+}
+
+// RevokeConsentResponse403Headers the declared response headers of an HTTP 403 response for RevokeConsent
+type RevokeConsentResponse403Headers struct {
+	XRequestID *string
+}
+
+// RevokeConsentResponse404Headers the declared response headers of an HTTP 404 response for RevokeConsent
+type RevokeConsentResponse404Headers struct {
+	XRequestID *string
+}
+
+// RevokeConsentResponse409Headers the declared response headers of an HTTP 409 response for RevokeConsent
+type RevokeConsentResponse409Headers struct {
+	XRequestID *string
+}
+
+// RevokeConsentResponse412Headers the declared response headers of an HTTP 412 response for RevokeConsent
+type RevokeConsentResponse412Headers struct {
+	XRequestID *string
+}
+
+// RevokeConsentResponseDefaultHeaders the declared response headers of an HTTP default response for RevokeConsent
+type RevokeConsentResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type RevokeConsentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *RevokeConsentResponse200Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *RevokeConsentResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *RevokeConsentResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *RevokeConsentResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *RevokeConsentResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *RevokeConsentResponse412Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *RevokeConsentResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r RevokeConsentResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r RevokeConsentResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r RevokeConsentResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r RevokeConsentResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r RevokeConsentResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r RevokeConsentResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1755,18 +2658,130 @@ func (r RevokeConsentResponse) ContentType() string {
 	return ""
 }
 
+// GrantConsentResponse200Headers the declared response headers of an HTTP 200 response for GrantConsent
+type GrantConsentResponse200Headers struct {
+	ETag *string
+}
+
+// GrantConsentResponse400Headers the declared response headers of an HTTP 400 response for GrantConsent
+type GrantConsentResponse400Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponse401Headers the declared response headers of an HTTP 401 response for GrantConsent
+type GrantConsentResponse401Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponse403Headers the declared response headers of an HTTP 403 response for GrantConsent
+type GrantConsentResponse403Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponse404Headers the declared response headers of an HTTP 404 response for GrantConsent
+type GrantConsentResponse404Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponse409Headers the declared response headers of an HTTP 409 response for GrantConsent
+type GrantConsentResponse409Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponse412Headers the declared response headers of an HTTP 412 response for GrantConsent
+type GrantConsentResponse412Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponse422Headers the declared response headers of an HTTP 422 response for GrantConsent
+type GrantConsentResponse422Headers struct {
+	XRequestID *string
+}
+
+// GrantConsentResponseDefaultHeaders the declared response headers of an HTTP default response for GrantConsent
+type GrantConsentResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type GrantConsentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GrantConsentResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *GrantConsentResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *GrantConsentResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *GrantConsentResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *GrantConsentResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *GrantConsentResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *GrantConsentResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *GrantConsentResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *GrantConsentResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r GrantConsentResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r GrantConsentResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1803,18 +2818,130 @@ func (r GrantConsentResponse) ContentType() string {
 	return ""
 }
 
+// AttachDocumentResponse200Headers the declared response headers of an HTTP 200 response for AttachDocument
+type AttachDocumentResponse200Headers struct {
+	ETag *string
+}
+
+// AttachDocumentResponse400Headers the declared response headers of an HTTP 400 response for AttachDocument
+type AttachDocumentResponse400Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponse401Headers the declared response headers of an HTTP 401 response for AttachDocument
+type AttachDocumentResponse401Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponse403Headers the declared response headers of an HTTP 403 response for AttachDocument
+type AttachDocumentResponse403Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponse404Headers the declared response headers of an HTTP 404 response for AttachDocument
+type AttachDocumentResponse404Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponse409Headers the declared response headers of an HTTP 409 response for AttachDocument
+type AttachDocumentResponse409Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponse412Headers the declared response headers of an HTTP 412 response for AttachDocument
+type AttachDocumentResponse412Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponse422Headers the declared response headers of an HTTP 422 response for AttachDocument
+type AttachDocumentResponse422Headers struct {
+	XRequestID *string
+}
+
+// AttachDocumentResponseDefaultHeaders the declared response headers of an HTTP default response for AttachDocument
+type AttachDocumentResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type AttachDocumentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *AttachDocumentResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AttachDocumentResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AttachDocumentResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AttachDocumentResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *AttachDocumentResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *AttachDocumentResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *AttachDocumentResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *AttachDocumentResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *AttachDocumentResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r AttachDocumentResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r AttachDocumentResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1851,18 +2978,130 @@ func (r AttachDocumentResponse) ContentType() string {
 	return ""
 }
 
+// ResolveManualReviewResponse200Headers the declared response headers of an HTTP 200 response for ResolveManualReview
+type ResolveManualReviewResponse200Headers struct {
+	ETag *string
+}
+
+// ResolveManualReviewResponse400Headers the declared response headers of an HTTP 400 response for ResolveManualReview
+type ResolveManualReviewResponse400Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponse401Headers the declared response headers of an HTTP 401 response for ResolveManualReview
+type ResolveManualReviewResponse401Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponse403Headers the declared response headers of an HTTP 403 response for ResolveManualReview
+type ResolveManualReviewResponse403Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponse404Headers the declared response headers of an HTTP 404 response for ResolveManualReview
+type ResolveManualReviewResponse404Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponse409Headers the declared response headers of an HTTP 409 response for ResolveManualReview
+type ResolveManualReviewResponse409Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponse412Headers the declared response headers of an HTTP 412 response for ResolveManualReview
+type ResolveManualReviewResponse412Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponse422Headers the declared response headers of an HTTP 422 response for ResolveManualReview
+type ResolveManualReviewResponse422Headers struct {
+	XRequestID *string
+}
+
+// ResolveManualReviewResponseDefaultHeaders the declared response headers of an HTTP default response for ResolveManualReview
+type ResolveManualReviewResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type ResolveManualReviewResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ResolveManualReviewResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *ResolveManualReviewResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *ResolveManualReviewResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *ResolveManualReviewResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *ResolveManualReviewResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *ResolveManualReviewResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *ResolveManualReviewResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *ResolveManualReviewResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *ResolveManualReviewResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r ResolveManualReviewResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r ResolveManualReviewResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1899,18 +3138,130 @@ func (r ResolveManualReviewResponse) ContentType() string {
 	return ""
 }
 
+// AcceptOfferResponse200Headers the declared response headers of an HTTP 200 response for AcceptOffer
+type AcceptOfferResponse200Headers struct {
+	ETag *string
+}
+
+// AcceptOfferResponse400Headers the declared response headers of an HTTP 400 response for AcceptOffer
+type AcceptOfferResponse400Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponse401Headers the declared response headers of an HTTP 401 response for AcceptOffer
+type AcceptOfferResponse401Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponse403Headers the declared response headers of an HTTP 403 response for AcceptOffer
+type AcceptOfferResponse403Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponse404Headers the declared response headers of an HTTP 404 response for AcceptOffer
+type AcceptOfferResponse404Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponse409Headers the declared response headers of an HTTP 409 response for AcceptOffer
+type AcceptOfferResponse409Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponse412Headers the declared response headers of an HTTP 412 response for AcceptOffer
+type AcceptOfferResponse412Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponse422Headers the declared response headers of an HTTP 422 response for AcceptOffer
+type AcceptOfferResponse422Headers struct {
+	XRequestID *string
+}
+
+// AcceptOfferResponseDefaultHeaders the declared response headers of an HTTP default response for AcceptOffer
+type AcceptOfferResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type AcceptOfferResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *AcceptOfferResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AcceptOfferResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AcceptOfferResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AcceptOfferResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *AcceptOfferResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *AcceptOfferResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *AcceptOfferResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *AcceptOfferResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *AcceptOfferResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r AcceptOfferResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r AcceptOfferResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1947,18 +3298,130 @@ func (r AcceptOfferResponse) ContentType() string {
 	return ""
 }
 
+// SubmitApplicationResponse200Headers the declared response headers of an HTTP 200 response for SubmitApplication
+type SubmitApplicationResponse200Headers struct {
+	ETag *string
+}
+
+// SubmitApplicationResponse400Headers the declared response headers of an HTTP 400 response for SubmitApplication
+type SubmitApplicationResponse400Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponse401Headers the declared response headers of an HTTP 401 response for SubmitApplication
+type SubmitApplicationResponse401Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponse403Headers the declared response headers of an HTTP 403 response for SubmitApplication
+type SubmitApplicationResponse403Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponse404Headers the declared response headers of an HTTP 404 response for SubmitApplication
+type SubmitApplicationResponse404Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponse409Headers the declared response headers of an HTTP 409 response for SubmitApplication
+type SubmitApplicationResponse409Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponse412Headers the declared response headers of an HTTP 412 response for SubmitApplication
+type SubmitApplicationResponse412Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponse422Headers the declared response headers of an HTTP 422 response for SubmitApplication
+type SubmitApplicationResponse422Headers struct {
+	XRequestID *string
+}
+
+// SubmitApplicationResponseDefaultHeaders the declared response headers of an HTTP default response for SubmitApplication
+type SubmitApplicationResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type SubmitApplicationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *SubmitApplicationResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *SubmitApplicationResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *SubmitApplicationResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *SubmitApplicationResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *SubmitApplicationResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *SubmitApplicationResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *SubmitApplicationResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *SubmitApplicationResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *SubmitApplicationResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r SubmitApplicationResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r SubmitApplicationResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -1995,18 +3458,130 @@ func (r SubmitApplicationResponse) ContentType() string {
 	return ""
 }
 
+// SelectVehicleResponse200Headers the declared response headers of an HTTP 200 response for SelectVehicle
+type SelectVehicleResponse200Headers struct {
+	ETag *string
+}
+
+// SelectVehicleResponse400Headers the declared response headers of an HTTP 400 response for SelectVehicle
+type SelectVehicleResponse400Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponse401Headers the declared response headers of an HTTP 401 response for SelectVehicle
+type SelectVehicleResponse401Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponse403Headers the declared response headers of an HTTP 403 response for SelectVehicle
+type SelectVehicleResponse403Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponse404Headers the declared response headers of an HTTP 404 response for SelectVehicle
+type SelectVehicleResponse404Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponse409Headers the declared response headers of an HTTP 409 response for SelectVehicle
+type SelectVehicleResponse409Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponse412Headers the declared response headers of an HTTP 412 response for SelectVehicle
+type SelectVehicleResponse412Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponse422Headers the declared response headers of an HTTP 422 response for SelectVehicle
+type SelectVehicleResponse422Headers struct {
+	XRequestID *string
+}
+
+// SelectVehicleResponseDefaultHeaders the declared response headers of an HTTP default response for SelectVehicle
+type SelectVehicleResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
 type SelectVehicleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *Application
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *externalRef0.NotFound
+	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
+	ApplicationproblemJSON409 *externalRef0.Conflict
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *externalRef0.PreconditionFailed
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *externalRef0.Unprocessable
 	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
 	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *SelectVehicleResponse200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *SelectVehicleResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *SelectVehicleResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *SelectVehicleResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *SelectVehicleResponse404Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *SelectVehicleResponse409Headers
+	// Headers412 the parsed response headers for an HTTP 412 response
+	Headers412 *SelectVehicleResponse412Headers
+	// Headers422 the parsed response headers for an HTTP 422 response
+	Headers422 *SelectVehicleResponse422Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *SelectVehicleResponseDefaultHeaders
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r SelectVehicleResponse) GetJSON200() *Application {
 	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON404() *externalRef0.NotFound {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON409 returns the response for an HTTP 409 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON409() *externalRef0.Conflict {
+	return r.ApplicationproblemJSON409
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON412() *externalRef0.PreconditionFailed {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r SelectVehicleResponse) GetApplicationproblemJSON422() *externalRef0.Unprocessable {
+	return r.ApplicationproblemJSON422
 }
 
 // GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
@@ -2043,9 +3618,13 @@ func (r SelectVehicleResponse) ContentType() string {
 	return ""
 }
 
-// ListApplicationsWithResponse performs a GET /v1/applications (the `ListApplications` operationId) request.
+// ListApplicationsWithResponse Список заявок
+//
+// Заявки тенанта, новые первыми; пагинация курсором.
 //
 // Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/applications (the `ListApplications` operationId).
 func (c *ClientWithResponses) ListApplicationsWithResponse(ctx context.Context, params *ListApplicationsParams, reqEditors ...RequestEditorFn) (*ListApplicationsResponse, error) {
 	rsp, err := c.ListApplications(ctx, params, reqEditors...)
 	if err != nil {
@@ -2054,9 +3633,13 @@ func (c *ClientWithResponses) ListApplicationsWithResponse(ctx context.Context, 
 	return ParseListApplicationsResponse(rsp)
 }
 
-// CreateApplicationWithResponse performs a POST /v1/applications (the `CreateApplication` operationId) request.
+// CreateApplicationWithResponse Создать черновик
+//
+// Создаёт пустой черновик заявки для тенанта из токена.
 //
 // Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/applications (the `CreateApplication` operationId).
 func (c *ClientWithResponses) CreateApplicationWithResponse(ctx context.Context, params *CreateApplicationParams, reqEditors ...RequestEditorFn) (*CreateApplicationResponse, error) {
 	rsp, err := c.CreateApplication(ctx, params, reqEditors...)
 	if err != nil {
@@ -2065,9 +3648,13 @@ func (c *ClientWithResponses) CreateApplicationWithResponse(ctx context.Context,
 	return ParseCreateApplicationResponse(rsp)
 }
 
-// GetApplicationWithResponse performs a GET /v1/applications/{id} (the `GetApplication` operationId) request.
+// GetApplicationWithResponse Получить заявку
+//
+// Текущее состояние заявки, включая историю переходов.
 //
 // Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/applications/{id} (the `GetApplication` operationId).
 func (c *ClientWithResponses) GetApplicationWithResponse(ctx context.Context, id ApplicationID, reqEditors ...RequestEditorFn) (*GetApplicationResponse, error) {
 	rsp, err := c.GetApplication(ctx, id, reqEditors...)
 	if err != nil {
@@ -2076,32 +3663,43 @@ func (c *ClientWithResponses) GetApplicationWithResponse(ctx context.Context, id
 	return ParseGetApplicationResponse(rsp)
 }
 
-// AttachApplicantWithBodyWithResponse performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request,
-// with any type of body and a specified content type.
+// AttachApplicantWithBodyWithResponse Указать заявителя
 //
-// Returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) AttachApplicantWithBodyWithResponse(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error) {
-	rsp, err := c.AttachApplicantWithBody(ctx, id, contentType, body, reqEditors...)
+// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+func (c *ClientWithResponses) AttachApplicantWithBodyWithResponse(ctx context.Context, id ApplicationID, params *AttachApplicantParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error) {
+	rsp, err := c.AttachApplicantWithBody(ctx, id, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseAttachApplicantResponse(rsp)
 }
 
-// AttachApplicantWithResponse performs a PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId) request.
+// AttachApplicantWithResponse Указать заявителя
+//
+// Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+//
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) AttachApplicantWithResponse(ctx context.Context, id ApplicationID, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error) {
-	rsp, err := c.AttachApplicant(ctx, id, body, reqEditors...)
+//
+// Corresponds with PUT /v1/applications/{id}/applicant (the `AttachApplicant` operationId).
+func (c *ClientWithResponses) AttachApplicantWithResponse(ctx context.Context, id ApplicationID, params *AttachApplicantParams, body AttachApplicantJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachApplicantResponse, error) {
+	rsp, err := c.AttachApplicant(ctx, id, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseAttachApplicantResponse(rsp)
 }
 
-// CancelApplicationWithBodyWithResponse performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request,
-// with any type of body and a specified content type.
+// CancelApplicationWithBodyWithResponse Отменить заявку
 //
-// Returns a wrapper object for the known response body format(s).
+// Отмена клиентом или сотрудником из любого нетерминального статуса.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 func (c *ClientWithResponses) CancelApplicationWithBodyWithResponse(ctx context.Context, id ApplicationID, params *CancelApplicationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CancelApplicationResponse, error) {
 	rsp, err := c.CancelApplicationWithBody(ctx, id, params, contentType, body, reqEditors...)
 	if err != nil {
@@ -2110,8 +3708,13 @@ func (c *ClientWithResponses) CancelApplicationWithBodyWithResponse(ctx context.
 	return ParseCancelApplicationResponse(rsp)
 }
 
-// CancelApplicationWithResponse performs a POST /v1/applications/{id}/cancel (the `CancelApplication` operationId) request.
+// CancelApplicationWithResponse Отменить заявку
+//
+// Отмена клиентом или сотрудником из любого нетерминального статуса.
+//
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/applications/{id}/cancel (the `CancelApplication` operationId).
 func (c *ClientWithResponses) CancelApplicationWithResponse(ctx context.Context, id ApplicationID, params *CancelApplicationParams, body CancelApplicationJSONRequestBody, reqEditors ...RequestEditorFn) (*CancelApplicationResponse, error) {
 	rsp, err := c.CancelApplication(ctx, id, params, body, reqEditors...)
 	if err != nil {
@@ -2120,67 +3723,88 @@ func (c *ClientWithResponses) CancelApplicationWithResponse(ctx context.Context,
 	return ParseCancelApplicationResponse(rsp)
 }
 
-// RevokeConsentWithResponse performs a DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId) request.
+// RevokeConsentWithResponse Отозвать согласие
+//
+// Доступно только в статусе draft.
 //
 // Returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) RevokeConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, reqEditors ...RequestEditorFn) (*RevokeConsentResponse, error) {
-	rsp, err := c.RevokeConsent(ctx, id, kind, reqEditors...)
+//
+// Corresponds with DELETE /v1/applications/{id}/consents/{kind} (the `RevokeConsent` operationId).
+func (c *ClientWithResponses) RevokeConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, params *RevokeConsentParams, reqEditors ...RequestEditorFn) (*RevokeConsentResponse, error) {
+	rsp, err := c.RevokeConsent(ctx, id, kind, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseRevokeConsentResponse(rsp)
 }
 
-// GrantConsentWithBodyWithResponse performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request,
-// with any type of body and a specified content type.
+// GrantConsentWithBodyWithResponse Дать согласие
 //
-// Returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) GrantConsentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error) {
-	rsp, err := c.GrantConsentWithBody(ctx, id, kind, contentType, body, reqEditors...)
+// Шаг 3. Фиксирует версию текста согласия.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+func (c *ClientWithResponses) GrantConsentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error) {
+	rsp, err := c.GrantConsentWithBody(ctx, id, kind, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseGrantConsentResponse(rsp)
 }
 
-// GrantConsentWithResponse performs a PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId) request.
+// GrantConsentWithResponse Дать согласие
+//
+// Шаг 3. Фиксирует версию текста согласия.
+//
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) GrantConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error) {
-	rsp, err := c.GrantConsent(ctx, id, kind, body, reqEditors...)
+//
+// Corresponds with PUT /v1/applications/{id}/consents/{kind} (the `GrantConsent` operationId).
+func (c *ClientWithResponses) GrantConsentWithResponse(ctx context.Context, id ApplicationID, kind ConsentKind, params *GrantConsentParams, body GrantConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*GrantConsentResponse, error) {
+	rsp, err := c.GrantConsent(ctx, id, kind, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseGrantConsentResponse(rsp)
 }
 
-// AttachDocumentWithBodyWithResponse performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request,
-// with any type of body and a specified content type.
+// AttachDocumentWithBodyWithResponse Приложить документ
 //
-// Returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) AttachDocumentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error) {
-	rsp, err := c.AttachDocumentWithBody(ctx, id, kind, contentType, body, reqEditors...)
+// Шаг 4. Файл должен быть заранее загружен в files.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+func (c *ClientWithResponses) AttachDocumentWithBodyWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error) {
+	rsp, err := c.AttachDocumentWithBody(ctx, id, kind, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseAttachDocumentResponse(rsp)
 }
 
-// AttachDocumentWithResponse performs a PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId) request.
+// AttachDocumentWithResponse Приложить документ
+//
+// Шаг 4. Файл должен быть заранее загружен в files.
+//
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) AttachDocumentWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error) {
-	rsp, err := c.AttachDocument(ctx, id, kind, body, reqEditors...)
+//
+// Corresponds with PUT /v1/applications/{id}/documents/{kind} (the `AttachDocument` operationId).
+func (c *ClientWithResponses) AttachDocumentWithResponse(ctx context.Context, id ApplicationID, kind DocumentKind, params *AttachDocumentParams, body AttachDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*AttachDocumentResponse, error) {
+	rsp, err := c.AttachDocument(ctx, id, kind, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseAttachDocumentResponse(rsp)
 }
 
-// ResolveManualReviewWithBodyWithResponse performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request,
-// with any type of body and a specified content type.
+// ResolveManualReviewWithBodyWithResponse Ручное решение
 //
-// Только роль underwriter.
+// Решение андеррайтера по заявке в статусе manual_review.
 //
-// Returns a wrapper object for the known response body format(s).
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 func (c *ClientWithResponses) ResolveManualReviewWithBodyWithResponse(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ResolveManualReviewResponse, error) {
 	rsp, err := c.ResolveManualReviewWithBody(ctx, id, params, contentType, body, reqEditors...)
 	if err != nil {
@@ -2189,10 +3813,13 @@ func (c *ClientWithResponses) ResolveManualReviewWithBodyWithResponse(ctx contex
 	return ParseResolveManualReviewResponse(rsp)
 }
 
-// ResolveManualReviewWithResponse performs a POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId) request.
+// ResolveManualReviewWithResponse Ручное решение
+//
+// Решение андеррайтера по заявке в статусе manual_review.
+//
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
-// Только роль underwriter.
+// Corresponds with POST /v1/applications/{id}/manual-decision (the `ResolveManualReview` operationId).
 func (c *ClientWithResponses) ResolveManualReviewWithResponse(ctx context.Context, id ApplicationID, params *ResolveManualReviewParams, body ResolveManualReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*ResolveManualReviewResponse, error) {
 	rsp, err := c.ResolveManualReview(ctx, id, params, body, reqEditors...)
 	if err != nil {
@@ -2201,9 +3828,13 @@ func (c *ClientWithResponses) ResolveManualReviewWithResponse(ctx context.Contex
 	return ParseResolveManualReviewResponse(rsp)
 }
 
-// AcceptOfferWithResponse performs a POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId) request.
+// AcceptOfferWithResponse Принять офер
+//
+// Доступно клиенту, пока офер не истёк.
 //
 // Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/applications/{id}/offer/accept (the `AcceptOffer` operationId).
 func (c *ClientWithResponses) AcceptOfferWithResponse(ctx context.Context, id ApplicationID, params *AcceptOfferParams, reqEditors ...RequestEditorFn) (*AcceptOfferResponse, error) {
 	rsp, err := c.AcceptOffer(ctx, id, params, reqEditors...)
 	if err != nil {
@@ -2212,9 +3843,13 @@ func (c *ClientWithResponses) AcceptOfferWithResponse(ctx context.Context, id Ap
 	return ParseAcceptOfferResponse(rsp)
 }
 
-// SubmitApplicationWithResponse performs a POST /v1/applications/{id}/submit (the `SubmitApplication` operationId) request.
+// SubmitApplicationWithResponse Отправить на скоринг
+//
+// Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
 //
 // Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/applications/{id}/submit (the `SubmitApplication` operationId).
 func (c *ClientWithResponses) SubmitApplicationWithResponse(ctx context.Context, id ApplicationID, params *SubmitApplicationParams, reqEditors ...RequestEditorFn) (*SubmitApplicationResponse, error) {
 	rsp, err := c.SubmitApplication(ctx, id, params, reqEditors...)
 	if err != nil {
@@ -2223,22 +3858,30 @@ func (c *ClientWithResponses) SubmitApplicationWithResponse(ctx context.Context,
 	return ParseSubmitApplicationResponse(rsp)
 }
 
-// SelectVehicleWithBodyWithResponse performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request,
-// with any type of body and a specified content type.
+// SelectVehicleWithBodyWithResponse Выбрать автомобиль
 //
-// Returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) SelectVehicleWithBodyWithResponse(ctx context.Context, id ApplicationID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error) {
-	rsp, err := c.SelectVehicleWithBody(ctx, id, contentType, body, reqEditors...)
+// Шаг 1. Доступно только в статусе draft.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+func (c *ClientWithResponses) SelectVehicleWithBodyWithResponse(ctx context.Context, id ApplicationID, params *SelectVehicleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error) {
+	rsp, err := c.SelectVehicleWithBody(ctx, id, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseSelectVehicleResponse(rsp)
 }
 
-// SelectVehicleWithResponse performs a PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId) request.
+// SelectVehicleWithResponse Выбрать автомобиль
+//
+// Шаг 1. Доступно только в статусе draft.
+//
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-func (c *ClientWithResponses) SelectVehicleWithResponse(ctx context.Context, id ApplicationID, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error) {
-	rsp, err := c.SelectVehicle(ctx, id, body, reqEditors...)
+//
+// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
+func (c *ClientWithResponses) SelectVehicleWithResponse(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error) {
+	rsp, err := c.SelectVehicle(ctx, id, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -2266,6 +3909,27 @@ func ParseListApplicationsResponse(rsp *http.Response) (*ListApplicationsRespons
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2273,6 +3937,49 @@ func ParseListApplicationsResponse(rsp *http.Response) (*ListApplicationsRespons
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers ListApplicationsResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers ListApplicationsResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers ListApplicationsResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case true:
+		var headers ListApplicationsResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2299,6 +4006,41 @@ func ParseCreateApplicationResponse(rsp *http.Response) (*CreateApplicationRespo
 		}
 		response.JSON201 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2306,6 +4048,79 @@ func ParseCreateApplicationResponse(rsp *http.Response) (*CreateApplicationRespo
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 201:
+		var headers CreateApplicationResponse201Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers201 = &headers
+	case rsp.StatusCode == 400:
+		var headers CreateApplicationResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers CreateApplicationResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers CreateApplicationResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 409:
+		var headers CreateApplicationResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 422:
+		var headers CreateApplicationResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers CreateApplicationResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2332,6 +4147,27 @@ func ParseGetApplicationResponse(rsp *http.Response) (*GetApplicationResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2339,6 +4175,59 @@ func ParseGetApplicationResponse(rsp *http.Response) (*GetApplicationResponse, e
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetApplicationResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 401:
+		var headers GetApplicationResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers GetApplicationResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers GetApplicationResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case true:
+		var headers GetApplicationResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2365,6 +4254,55 @@ func ParseAttachApplicantResponse(rsp *http.Response) (*AttachApplicantResponse,
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2372,6 +4310,99 @@ func ParseAttachApplicantResponse(rsp *http.Response) (*AttachApplicantResponse,
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers AttachApplicantResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers AttachApplicantResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AttachApplicantResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AttachApplicantResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers AttachApplicantResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers AttachApplicantResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers AttachApplicantResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers AttachApplicantResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers AttachApplicantResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2398,6 +4429,48 @@ func ParseCancelApplicationResponse(rsp *http.Response) (*CancelApplicationRespo
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2405,6 +4478,89 @@ func ParseCancelApplicationResponse(rsp *http.Response) (*CancelApplicationRespo
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers CancelApplicationResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers CancelApplicationResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers CancelApplicationResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers CancelApplicationResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers CancelApplicationResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers CancelApplicationResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers CancelApplicationResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case true:
+		var headers CancelApplicationResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2431,6 +4587,41 @@ func ParseRevokeConsentResponse(rsp *http.Response) (*RevokeConsentResponse, err
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2438,6 +4629,79 @@ func ParseRevokeConsentResponse(rsp *http.Response) (*RevokeConsentResponse, err
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers RevokeConsentResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 401:
+		var headers RevokeConsentResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers RevokeConsentResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers RevokeConsentResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers RevokeConsentResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers RevokeConsentResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case true:
+		var headers RevokeConsentResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2464,6 +4728,55 @@ func ParseGrantConsentResponse(rsp *http.Response) (*GrantConsentResponse, error
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2471,6 +4784,99 @@ func ParseGrantConsentResponse(rsp *http.Response) (*GrantConsentResponse, error
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GrantConsentResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers GrantConsentResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers GrantConsentResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers GrantConsentResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers GrantConsentResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers GrantConsentResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers GrantConsentResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers GrantConsentResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers GrantConsentResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2497,6 +4903,55 @@ func ParseAttachDocumentResponse(rsp *http.Response) (*AttachDocumentResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2504,6 +4959,99 @@ func ParseAttachDocumentResponse(rsp *http.Response) (*AttachDocumentResponse, e
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers AttachDocumentResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers AttachDocumentResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AttachDocumentResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AttachDocumentResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers AttachDocumentResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers AttachDocumentResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers AttachDocumentResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers AttachDocumentResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers AttachDocumentResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2530,6 +5078,55 @@ func ParseResolveManualReviewResponse(rsp *http.Response) (*ResolveManualReviewR
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2537,6 +5134,99 @@ func ParseResolveManualReviewResponse(rsp *http.Response) (*ResolveManualReviewR
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ResolveManualReviewResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers ResolveManualReviewResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers ResolveManualReviewResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers ResolveManualReviewResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers ResolveManualReviewResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers ResolveManualReviewResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers ResolveManualReviewResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers ResolveManualReviewResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers ResolveManualReviewResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2563,6 +5253,55 @@ func ParseAcceptOfferResponse(rsp *http.Response) (*AcceptOfferResponse, error) 
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2570,6 +5309,99 @@ func ParseAcceptOfferResponse(rsp *http.Response) (*AcceptOfferResponse, error) 
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers AcceptOfferResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers AcceptOfferResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AcceptOfferResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AcceptOfferResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers AcceptOfferResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers AcceptOfferResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers AcceptOfferResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers AcceptOfferResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers AcceptOfferResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2596,6 +5428,55 @@ func ParseSubmitApplicationResponse(rsp *http.Response) (*SubmitApplicationRespo
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2603,6 +5484,99 @@ func ParseSubmitApplicationResponse(rsp *http.Response) (*SubmitApplicationRespo
 		}
 		response.ApplicationproblemJSONDefault = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers SubmitApplicationResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers SubmitApplicationResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers SubmitApplicationResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers SubmitApplicationResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers SubmitApplicationResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers SubmitApplicationResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers SubmitApplicationResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers SubmitApplicationResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers SubmitApplicationResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
 	}
 
 	return response, nil
@@ -2629,6 +5603,55 @@ func ParseSelectVehicleResponse(rsp *http.Response) (*SelectVehicleResponse, err
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest externalRef0.Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest externalRef0.PreconditionFailed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest externalRef0.Unprocessable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.Problem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2638,47 +5661,140 @@ func ParseSelectVehicleResponse(rsp *http.Response) (*SelectVehicleResponse, err
 
 	}
 
+	switch {
+	case rsp.StatusCode == 200:
+		var headers SelectVehicleResponse200Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers SelectVehicleResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers SelectVehicleResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers SelectVehicleResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers SelectVehicleResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 409:
+		var headers SelectVehicleResponse409Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 412:
+		var headers SelectVehicleResponse412Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers412 = &headers
+	case rsp.StatusCode == 422:
+		var headers SelectVehicleResponse422Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers422 = &headers
+	case true:
+		var headers SelectVehicleResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
+	}
+
 	return response, nil
 }
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-
+	// ListApplications Список заявок
 	// (GET /v1/applications)
 	ListApplications(c fiber.Ctx, params ListApplicationsParams) error
-
+	// CreateApplication Создать черновик
 	// (POST /v1/applications)
 	CreateApplication(c fiber.Ctx, params CreateApplicationParams) error
-
+	// GetApplication Получить заявку
 	// (GET /v1/applications/{id})
 	GetApplication(c fiber.Ctx, id ApplicationID) error
-
+	// AttachApplicant Указать заявителя
 	// (PUT /v1/applications/{id}/applicant)
-	AttachApplicant(c fiber.Ctx, id ApplicationID) error
-
+	AttachApplicant(c fiber.Ctx, id ApplicationID, params AttachApplicantParams) error
+	// CancelApplication Отменить заявку
 	// (POST /v1/applications/{id}/cancel)
 	CancelApplication(c fiber.Ctx, id ApplicationID, params CancelApplicationParams) error
-
+	// RevokeConsent Отозвать согласие
 	// (DELETE /v1/applications/{id}/consents/{kind})
-	RevokeConsent(c fiber.Ctx, id ApplicationID, kind ConsentKind) error
-
+	RevokeConsent(c fiber.Ctx, id ApplicationID, kind ConsentKind, params RevokeConsentParams) error
+	// GrantConsent Дать согласие
 	// (PUT /v1/applications/{id}/consents/{kind})
-	GrantConsent(c fiber.Ctx, id ApplicationID, kind ConsentKind) error
-
+	GrantConsent(c fiber.Ctx, id ApplicationID, kind ConsentKind, params GrantConsentParams) error
+	// AttachDocument Приложить документ
 	// (PUT /v1/applications/{id}/documents/{kind})
-	AttachDocument(c fiber.Ctx, id ApplicationID, kind DocumentKind) error
-
+	AttachDocument(c fiber.Ctx, id ApplicationID, kind DocumentKind, params AttachDocumentParams) error
+	// ResolveManualReview Ручное решение
 	// (POST /v1/applications/{id}/manual-decision)
 	ResolveManualReview(c fiber.Ctx, id ApplicationID, params ResolveManualReviewParams) error
-
+	// AcceptOffer Принять офер
 	// (POST /v1/applications/{id}/offer/accept)
 	AcceptOffer(c fiber.Ctx, id ApplicationID, params AcceptOfferParams) error
-
+	// SubmitApplication Отправить на скоринг
 	// (POST /v1/applications/{id}/submit)
 	SubmitApplication(c fiber.Ctx, id ApplicationID, params SubmitApplicationParams) error
-
+	// SelectVehicle Выбрать автомобиль
 	// (PUT /v1/applications/{id}/vehicle)
-	SelectVehicle(c fiber.Ctx, id ApplicationID) error
+	SelectVehicle(c fiber.Ctx, id ApplicationID, params SelectVehicleParams) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -2829,8 +5945,30 @@ func (siw *ServerInterfaceWrapper) AttachApplicant(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AttachApplicantParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
-		return siw.Handler.AttachApplicant(c, id)
+		return siw.Handler.AttachApplicant(c, id, params)
 	}
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -2882,6 +6020,23 @@ func (siw *ServerInterfaceWrapper) CancelApplication(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Header parameter Idempotency-Key is required, but not found")
 	}
 
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
 		return siw.Handler.CancelApplication(c, id, params)
 	}
@@ -2919,8 +6074,30 @@ func (siw *ServerInterfaceWrapper) RevokeConsent(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter kind: %w", err).Error())
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RevokeConsentParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
-		return siw.Handler.RevokeConsent(c, id, kind)
+		return siw.Handler.RevokeConsent(c, id, kind, params)
 	}
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -2956,8 +6133,30 @@ func (siw *ServerInterfaceWrapper) GrantConsent(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter kind: %w", err).Error())
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GrantConsentParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
-		return siw.Handler.GrantConsent(c, id, kind)
+		return siw.Handler.GrantConsent(c, id, kind, params)
 	}
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -2993,8 +6192,30 @@ func (siw *ServerInterfaceWrapper) AttachDocument(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter kind: %w", err).Error())
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AttachDocumentParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
-		return siw.Handler.AttachDocument(c, id, kind)
+		return siw.Handler.AttachDocument(c, id, kind, params)
 	}
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -3044,6 +6265,23 @@ func (siw *ServerInterfaceWrapper) ResolveManualReview(c fiber.Ctx) error {
 
 	} else {
 		return fiber.NewError(fiber.StatusBadRequest, "Header parameter Idempotency-Key is required, but not found")
+	}
+
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
 	}
 
 	handler := func(c fiber.Ctx) error {
@@ -3099,6 +6337,23 @@ func (siw *ServerInterfaceWrapper) AcceptOffer(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Header parameter Idempotency-Key is required, but not found")
 	}
 
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
 		return siw.Handler.AcceptOffer(c, id, params)
 	}
@@ -3152,6 +6407,23 @@ func (siw *ServerInterfaceWrapper) SubmitApplication(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Header parameter Idempotency-Key is required, but not found")
 	}
 
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
 		return siw.Handler.SubmitApplication(c, id, params)
 	}
@@ -3181,8 +6453,30 @@ func (siw *ServerInterfaceWrapper) SelectVehicle(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SelectVehicleParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch externalRef0.IfMatch
+		n := len(valueList)
+		if n != 1 {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Too many values for ParamName If-Match, 1 is required, but %d found", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter If-Match: %w", err).Error())
+		}
+
+		params.IfMatch = &IfMatch
+
+	}
+
 	handler := func(c fiber.Ctx) error {
-		return siw.Handler.SelectVehicle(c, id)
+		return siw.Handler.SelectVehicle(c, id, params)
 	}
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {

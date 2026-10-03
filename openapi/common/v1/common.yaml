@@ -8,9 +8,11 @@ components:
   schemas:
     Currency:
       type: string
+      description: Код валюты ISO 4217.
       enum: [KZT]
     Money:
       type: object
+      description: Денежная сумма в минимальных единицах (тиын).
       required: [amount_minor, currency]
       properties:
         amount_minor:
@@ -22,49 +24,126 @@ components:
           $ref: '#/components/schemas/Currency'
     FieldError:
       type: object
+      description: Ошибка отдельного поля или недостающего элемента.
       required: [field, message]
       properties:
-        field: {type: string}
-        message: {type: string}
-        code: {type: string}
+        field: {type: string, description: Путь к полю или элементу, например consent:credit_bureau.}
+        message: {type: string, description: Описание ошибки.}
+        code: {type: string, description: Машинный код ошибки.}
     Problem:
       type: object
       description: RFC 9457.
       required: [type, title, status]
       properties:
-        type: {type: string}
-        title: {type: string}
-        status: {type: integer}
-        detail: {type: string}
-        instance: {type: string}
-        code: {type: string}
+        type: {type: string, description: URI типа проблемы., examples: ['about:blank']}
+        title: {type: string, description: Краткое название.}
+        status: {type: integer, description: HTTP-статус.}
+        detail: {type: string, description: Подробности; для 5xx пусто.}
+        instance: {type: string, description: Путь запроса.}
+        code: {type: string, description: Стабильный машинный код для клиентской логики.}
         errors:
           type: array
+          description: Ошибки по полям.
           items:
             $ref: '#/components/schemas/FieldError'
     PageInfo:
       type: object
+      description: Состояние курсорной пагинации.
       required: [has_more]
       properties:
-        next_cursor: {type: string}
-        has_more: {type: boolean}
+        next_cursor: {type: string, description: Курсор следующей страницы.}
+        has_more: {type: boolean, description: Есть ли следующая страница.}
+  headers:
+    RequestID:
+      description: Идентификатор запроса; принимается от клиента или генерируется.
+      schema: {type: string}
+    ETag:
+      description: Версия ресурса в кавычках; передаётся обратно в If-Match.
+      schema: {type: string, examples: ['"3"']}
   parameters:
+    IfMatch:
+      name: If-Match
+      in: header
+      required: false
+      description: Ожидаемая версия ресурса (значение ETag). При несовпадении — 412.
+      schema: {type: string}
     IdempotencyKey:
       name: Idempotency-Key
       in: header
       required: true
+      description: Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ.
       schema: {type: string, minLength: 8, maxLength: 128}
     Cursor:
       name: cursor
       in: query
+      description: Курсор из page.next_cursor предыдущего ответа.
       schema: {type: string}
     Limit:
       name: limit
       in: query
+      description: Размер страницы.
       schema: {type: integer, minimum: 1, maximum: 100, default: 20}
   responses:
     Problem:
       description: Ошибка в формате Problem Details.
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BadRequest:
+      description: Некорректный запрос (invalid_json, idempotency_key_required, idempotency_key_invalid).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Нет или недействителен токен (unauthorized).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Недостаточно прав (forbidden).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Ресурс не найден в тенанте (not_found).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Конфликт состояния (invalid_transition, not_draft, idempotency_in_progress).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionFailed:
+      description: Версия ресурса не совпала с If-Match (version_mismatch).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unprocessable:
+      description: Запрос понятен, но не выполним (invalid_argument, incomplete_application, offer_expired, reason_required, idempotency_key_reused).
+      headers:
+        X-Request-ID: {$ref: '#/components/headers/RequestID'}
       content:
         application/problem+json:
           schema:

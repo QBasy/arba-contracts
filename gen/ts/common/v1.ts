@@ -7,8 +7,12 @@ export type paths = Record<string, never>;
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @enum {string} */
+        /**
+         * @description Код валюты ISO 4217.
+         * @enum {string}
+         */
         Currency: "KZT";
+        /** @description Денежная сумма в минимальных единицах (тиын). */
         Money: {
             /**
              * @description Сумма в тиынах.
@@ -17,23 +21,40 @@ export interface components {
             amount_minor: string;
             currency: components["schemas"]["Currency"];
         };
+        /** @description Ошибка отдельного поля или недостающего элемента. */
         FieldError: {
+            /** @description Путь к полю или элементу */
             field: string;
+            /** @description Описание ошибки. */
             message: string;
+            /** @description Машинный код ошибки. */
             code?: string;
         };
         /** @description RFC 9457. */
         Problem: {
+            /**
+             * @description URI типа проблемы.
+             * @example about:blank
+             */
             type: string;
+            /** @description Краткое название. */
             title: string;
+            /** @description HTTP-статус. */
             status: number;
+            /** @description Подробности; для 5xx пусто. */
             detail?: string;
+            /** @description Путь запроса. */
             instance?: string;
+            /** @description Стабильный машинный код для клиентской логики. */
             code?: string;
+            /** @description Ошибки по полям. */
             errors?: components["schemas"]["FieldError"][];
         };
+        /** @description Состояние курсорной пагинации. */
         PageInfo: {
+            /** @description Курсор следующей страницы. */
             next_cursor?: string;
+            /** @description Есть ли следующая страница. */
             has_more: boolean;
         };
     };
@@ -41,6 +62,77 @@ export interface components {
         /** @description Ошибка в формате Problem Details. */
         Problem: {
             headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Некорректный запрос (invalid_json, idempotency_key_required, idempotency_key_invalid). */
+        BadRequest: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Нет или недействителен токен (unauthorized). */
+        Unauthorized: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Недостаточно прав (forbidden). */
+        Forbidden: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Ресурс не найден в тенанте (not_found). */
+        NotFound: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Конфликт состояния (invalid_transition, not_draft, idempotency_in_progress). */
+        Conflict: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Версия ресурса не совпала с If-Match (version_mismatch). */
+        PreconditionFailed: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Запрос понятен, но не выполним (invalid_argument, incomplete_application, offer_expired, reason_required, idempotency_key_reused). */
+        Unprocessable: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
                 [name: string]: unknown;
             };
             content: {
@@ -49,12 +141,22 @@ export interface components {
         };
     };
     parameters: {
+        /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+        IfMatch: string;
+        /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
         IdempotencyKey: string;
+        /** @description Курсор из page.next_cursor предыдущего ответа. */
         Cursor: string;
+        /** @description Размер страницы. */
         Limit: number;
     };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Идентификатор запроса; принимается от клиента или генерируется. */
+        RequestID: string;
+        /** @description Версия ресурса в кавычках; передаётся обратно в If-Match. */
+        ETag: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;

@@ -11,8 +11,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Список заявок
+         * @description Заявки тенанта, новые первыми; пагинация курсором.
+         */
         get: operations["listApplications"];
         put?: never;
+        /**
+         * Создать черновик
+         * @description Создаёт пустой черновик заявки для тенанта из токена.
+         */
         post: operations["createApplication"];
         delete?: never;
         options?: never;
@@ -25,10 +33,15 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
+        /**
+         * Получить заявку
+         * @description Текущее состояние заявки, включая историю переходов.
+         */
         get: operations["getApplication"];
         put?: never;
         post?: never;
@@ -43,11 +56,16 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         get?: never;
+        /**
+         * Выбрать автомобиль
+         * @description Шаг 1. Доступно только в статусе draft.
+         */
         put: operations["selectVehicle"];
         post?: never;
         delete?: never;
@@ -61,11 +79,16 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         get?: never;
+        /**
+         * Указать заявителя
+         * @description Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+         */
         put: operations["attachApplicant"];
         post?: never;
         delete?: never;
@@ -79,14 +102,24 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
+                /** @description Вид. */
                 kind: components["schemas"]["ConsentKind"];
             };
             cookie?: never;
         };
         get?: never;
+        /**
+         * Дать согласие
+         * @description Шаг 3. Фиксирует версию текста согласия.
+         */
         put: operations["grantConsent"];
         post?: never;
+        /**
+         * Отозвать согласие
+         * @description Доступно только в статусе draft.
+         */
         delete: operations["revokeConsent"];
         options?: never;
         head?: never;
@@ -98,12 +131,18 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
+                /** @description Вид. */
                 kind: components["schemas"]["DocumentKind"];
             };
             cookie?: never;
         };
         get?: never;
+        /**
+         * Приложить документ
+         * @description Шаг 4. Файл должен быть заранее загружен в files.
+         */
         put: operations["attachDocument"];
         post?: never;
         delete?: never;
@@ -117,12 +156,17 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         get?: never;
         put?: never;
+        /**
+         * Отправить на скоринг
+         * @description Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
+         */
         post: operations["submitApplication"];
         delete?: never;
         options?: never;
@@ -135,12 +179,17 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         get?: never;
         put?: never;
+        /**
+         * Отменить заявку
+         * @description Отмена клиентом или сотрудником из любого нетерминального статуса.
+         */
         post: operations["cancelApplication"];
         delete?: never;
         options?: never;
@@ -153,13 +202,17 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         get?: never;
         put?: never;
-        /** @description Только роль underwriter. */
+        /**
+         * Ручное решение
+         * @description Решение андеррайтера по заявке в статусе manual_review.
+         */
         post: operations["resolveManualReview"];
         delete?: never;
         options?: never;
@@ -172,12 +225,17 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         get?: never;
         put?: never;
+        /**
+         * Принять офер
+         * @description Доступно клиенту, пока офер не истёк.
+         */
         post: operations["acceptOffer"];
         delete?: never;
         options?: never;
@@ -189,24 +247,44 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @enum {string} */
+        /**
+         * @description Статус заявки.
+         * @enum {string}
+         */
         Status: "draft" | "scoring" | "manual_review" | "approved" | "rejected" | "offer_issued" | "offer_accepted" | "contract_signed" | "cancelled" | "expired";
-        /** @enum {string} */
+        /**
+         * @description Тип заявителя.
+         * @enum {string}
+         */
         ApplicantKind: "individual" | "taxi_driver";
-        /** @enum {string} */
+        /**
+         * @description Вид согласия.
+         * @enum {string}
+         */
         ConsentKind: "personal_data" | "credit_bureau" | "aggregator_data" | "telematics";
-        /** @enum {string} */
+        /**
+         * @description Вид документа.
+         * @enum {string}
+         */
         DocumentKind: "identity" | "driver_license" | "income";
-        /** @enum {string} */
+        /**
+         * @description Решение по заявке.
+         * @enum {string}
+         */
         Outcome: "approve" | "reject";
-        /** @enum {string} */
+        /**
+         * @description Кто совершил действие.
+         * @enum {string}
+         */
         ActorKind: "client" | "underwriter" | "system";
+        /** @description Данное согласие. */
         Consent: {
             kind: components["schemas"]["ConsentKind"];
             text_version: string;
             /** Format: date-time */
             granted_at: string;
         };
+        /** @description Приложенный документ. */
         Document: {
             kind: components["schemas"]["DocumentKind"];
             /** Format: uuid */
@@ -214,12 +292,14 @@ export interface components {
             /** Format: date-time */
             added_at: string;
         };
+        /** @description Выпущенный офер. */
         Offer: {
             /** Format: uuid */
             id: string;
             /** Format: date-time */
             expires_at: string;
         };
+        /** @description Запись истории переходов статуса. */
         Transition: {
             from: components["schemas"]["Status"];
             to: components["schemas"]["Status"];
@@ -228,6 +308,7 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /** @description Заявка на лизинг. */
         Application: {
             /** Format: uuid */
             id: string;
@@ -254,52 +335,76 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        /** @description Страница заявок. */
         ApplicationPage: {
             items: components["schemas"]["Application"][];
             page: components["schemas"]["PageInfo"];
         };
+        /** @description Выбор автомобиля. */
         SelectVehicleRequest: {
             /** Format: uuid */
             vehicle_id: string;
         };
+        /** @description Привязка заявителя. */
         AttachApplicantRequest: {
             /** Format: uuid */
             applicant_id: string;
             kind: components["schemas"]["ApplicantKind"];
         };
+        /** @description Данные согласия. */
         GrantConsentRequest: {
             text_version: string;
         };
+        /** @description Ссылка на загруженный файл. */
         AttachDocumentRequest: {
             /** Format: uuid */
             file_id: string;
         };
+        /** @description Причина отмены. */
         CancelRequest: {
-            reason?: string;
+            reason: string;
         };
+        /** @description Решение андеррайтера. */
         ManualDecisionRequest: {
             /** Format: uuid */
             decision_id: string;
             outcome: components["schemas"]["Outcome"];
             reason: string;
         };
+        /** @description Ошибка отдельного поля или недостающего элемента. */
         FieldError: {
+            /** @description Путь к полю или элементу */
             field: string;
+            /** @description Описание ошибки. */
             message: string;
+            /** @description Машинный код ошибки. */
             code?: string;
         };
         /** @description RFC 9457. */
         Problem: {
+            /**
+             * @description URI типа проблемы.
+             * @example about:blank
+             */
             type: string;
+            /** @description Краткое название. */
             title: string;
+            /** @description HTTP-статус. */
             status: number;
+            /** @description Подробности; для 5xx пусто. */
             detail?: string;
+            /** @description Путь запроса. */
             instance?: string;
+            /** @description Стабильный машинный код для клиентской логики. */
             code?: string;
+            /** @description Ошибки по полям. */
             errors?: components["schemas"]["FieldError"][];
         };
+        /** @description Состояние курсорной пагинации. */
         PageInfo: {
+            /** @description Курсор следующей страницы. */
             next_cursor?: string;
+            /** @description Есть ли следующая страница. */
             has_more: boolean;
         };
     };
@@ -307,6 +412,7 @@ export interface components {
         /** @description Актуальное состояние заявки. */
         Application: {
             headers: {
+                ETag: components["headers"]["ETag"];
                 [name: string]: unknown;
             };
             content: {
@@ -316,6 +422,77 @@ export interface components {
         /** @description Ошибка в формате Problem Details. */
         Problem: {
             headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Некорректный запрос (invalid_json, idempotency_key_required, idempotency_key_invalid). */
+        BadRequest: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Нет или недействителен токен (unauthorized). */
+        Unauthorized: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Недостаточно прав (forbidden). */
+        Forbidden: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Конфликт состояния (invalid_transition, not_draft, idempotency_in_progress). */
+        Conflict: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Запрос понятен, но не выполним (invalid_argument, incomplete_application, offer_expired, reason_required, idempotency_key_reused). */
+        Unprocessable: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Ресурс не найден в тенанте (not_found). */
+        NotFound: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Версия ресурса не совпала с If-Match (version_mismatch). */
+        PreconditionFailed: {
+            headers: {
+                "X-Request-ID": components["headers"]["RequestID"];
                 [name: string]: unknown;
             };
             content: {
@@ -324,13 +501,24 @@ export interface components {
         };
     };
     parameters: {
+        /** @description Идентификатор заявки. */
         ApplicationID: string;
+        /** @description Курсор из page.next_cursor предыдущего ответа. */
         Cursor: string;
+        /** @description Размер страницы. */
         Limit: number;
+        /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
         IdempotencyKey: string;
+        /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+        IfMatch: string;
     };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Идентификатор запроса; принимается от клиента или генерируется. */
+        RequestID: string;
+        /** @description Версия ресурса в кавычках; передаётся обратно в If-Match. */
+        ETag: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
@@ -338,8 +526,11 @@ export interface operations {
     listApplications: {
         parameters: {
             query?: {
+                /** @description Курсор из page.next_cursor предыдущего ответа. */
                 cursor?: components["parameters"]["Cursor"];
+                /** @description Размер страницы. */
                 limit?: components["parameters"]["Limit"];
+                /** @description Фильтр по статусу. */
                 status?: components["schemas"]["Status"];
             };
             header?: never;
@@ -357,6 +548,9 @@ export interface operations {
                     "application/json": components["schemas"]["ApplicationPage"];
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             default: components["responses"]["Problem"];
         };
     };
@@ -364,6 +558,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path?: never;
@@ -371,15 +566,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Создана. */
+            /** @description Черновик создан. */
             201: {
                 headers: {
+                    ETag: components["headers"]["ETag"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["Application"];
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
@@ -388,29 +589,29 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Заявка. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Application"];
-                };
-            };
+            200: components["responses"]["Application"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             default: components["responses"]["Problem"];
         };
     };
     selectVehicle: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
@@ -422,14 +623,25 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
     attachApplicant: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
@@ -441,15 +653,27 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
     grantConsent: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
+                /** @description Вид. */
                 kind: components["schemas"]["ConsentKind"];
             };
             cookie?: never;
@@ -461,15 +685,27 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
     revokeConsent: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
+                /** @description Вид. */
                 kind: components["schemas"]["ConsentKind"];
             };
             cookie?: never;
@@ -477,15 +713,25 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["Application"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
             default: components["responses"]["Problem"];
         };
     };
     attachDocument: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
+                /** @description Вид. */
                 kind: components["schemas"]["DocumentKind"];
             };
             cookie?: never;
@@ -497,6 +743,13 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
@@ -504,9 +757,13 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
             };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
@@ -514,6 +771,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
@@ -521,20 +785,30 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
             };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["CancelRequest"];
             };
         };
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
             default: components["responses"]["Problem"];
         };
     };
@@ -542,9 +816,13 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
             };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
@@ -556,6 +834,13 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };
@@ -563,9 +848,13 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
             };
             path: {
+                /** @description Идентификатор заявки. */
                 id: components["parameters"]["ApplicationID"];
             };
             cookie?: never;
@@ -573,6 +862,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
             default: components["responses"]["Problem"];
         };
     };

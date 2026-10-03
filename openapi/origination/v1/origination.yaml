@@ -9,28 +9,41 @@ security:
   - bearer: []
 tags:
   - name: applications
+    description: Жизненный цикл заявки.
 paths:
   /v1/applications:
     post:
       operationId: createApplication
       tags: [applications]
+      summary: Создать черновик
+      description: Создаёт пустой черновик заявки для тенанта из токена.
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
       responses:
         '201':
-          description: Создана.
+          description: Черновик создан.
+          headers:
+            ETag: {$ref: '../../common/v1/common.yaml#/components/headers/ETag'}
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
     get:
       operationId: listApplications
       tags: [applications]
+      summary: Список заявок
+      description: Заявки тенанта, новые первыми; пагинация курсором.
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/Cursor'
         - $ref: '../../common/v1/common.yaml#/components/parameters/Limit'
         - name: status
           in: query
+          description: Фильтр по статусу.
           schema: {$ref: '#/components/schemas/Status'}
       responses:
         '200':
@@ -38,6 +51,9 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/ApplicationPage'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}:
     parameters:
@@ -45,12 +61,13 @@ paths:
     get:
       operationId: getApplication
       tags: [applications]
+      summary: Получить заявку
+      description: Текущее состояние заявки, включая историю переходов.
       responses:
-        '200':
-          description: Заявка.
-          content:
-            application/json:
-              schema: {$ref: '#/components/schemas/Application'}
+        '200': {$ref: '#/components/responses/Application'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/vehicle:
     parameters:
@@ -58,6 +75,10 @@ paths:
     put:
       operationId: selectVehicle
       tags: [applications]
+      summary: Выбрать автомобиль
+      description: Шаг 1. Доступно только в статусе draft.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -65,6 +86,13 @@ paths:
             schema: {$ref: '#/components/schemas/SelectVehicleRequest'}
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/applicant:
     parameters:
@@ -72,6 +100,10 @@ paths:
     put:
       operationId: attachApplicant
       tags: [applications]
+      summary: Указать заявителя
+      description: Шаг 2. Тип заявителя определяет обязательные согласия и документы.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -79,6 +111,13 @@ paths:
             schema: {$ref: '#/components/schemas/AttachApplicantRequest'}
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/consents/{kind}:
     parameters:
@@ -86,10 +125,15 @@ paths:
       - name: kind
         in: path
         required: true
+        description: Вид.
         schema: {$ref: '#/components/schemas/ConsentKind'}
     put:
       operationId: grantConsent
       tags: [applications]
+      summary: Дать согласие
+      description: Шаг 3. Фиксирует версию текста согласия.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -97,12 +141,28 @@ paths:
             schema: {$ref: '#/components/schemas/GrantConsentRequest'}
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
     delete:
       operationId: revokeConsent
       tags: [applications]
+      summary: Отозвать согласие
+      description: Доступно только в статусе draft.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/documents/{kind}:
     parameters:
@@ -110,10 +170,15 @@ paths:
       - name: kind
         in: path
         required: true
+        description: Вид.
         schema: {$ref: '#/components/schemas/DocumentKind'}
     put:
       operationId: attachDocument
       tags: [applications]
+      summary: Приложить документ
+      description: Шаг 4. Файл должен быть заранее загружен в files.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -121,6 +186,13 @@ paths:
             schema: {$ref: '#/components/schemas/AttachDocumentRequest'}
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/submit:
     parameters:
@@ -128,10 +200,20 @@ paths:
     post:
       operationId: submitApplication
       tags: [applications]
+      summary: Отправить на скоринг
+      description: Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/cancel:
     parameters:
@@ -139,14 +221,24 @@ paths:
     post:
       operationId: cancelApplication
       tags: [applications]
+      summary: Отменить заявку
+      description: Отмена клиентом или сотрудником из любого нетерминального статуса.
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       requestBody:
+        required: true
         content:
           application/json:
             schema: {$ref: '#/components/schemas/CancelRequest'}
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/manual-decision:
     parameters:
@@ -154,9 +246,12 @@ paths:
     post:
       operationId: resolveManualReview
       tags: [applications]
-      description: Только роль underwriter.
+      summary: Ручное решение
+      description: Решение андеррайтера по заявке в статусе manual_review.
+      x-required-roles: [underwriter]
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -164,6 +259,13 @@ paths:
             schema: {$ref: '#/components/schemas/ManualDecisionRequest'}
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/offer/accept:
     parameters:
@@ -171,14 +273,25 @@ paths:
     post:
       operationId: acceptOffer
       tags: [applications]
+      summary: Принять офер
+      description: Доступно клиенту, пока офер не истёк.
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
       responses:
         '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
 components:
   securitySchemes:
     bearer:
+      description: JWT, выданный Keycloak; tenant_id и roles берутся из claims.
       type: http
       scheme: bearer
       bearerFormat: JWT
@@ -187,39 +300,49 @@ components:
       name: id
       in: path
       required: true
+      description: Идентификатор заявки.
       schema: {type: string, format: uuid}
   responses:
     Application:
       description: Актуальное состояние заявки.
+      headers:
+        ETag: {$ref: '../../common/v1/common.yaml#/components/headers/ETag'}
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Application'}
   schemas:
     Status:
+      description: Статус заявки.
       type: string
       enum: [draft, scoring, manual_review, approved, rejected, offer_issued, offer_accepted, contract_signed, cancelled, expired]
       x-enum-varnames: [StatusDraft, StatusScoring, StatusManualReview, StatusApproved, StatusRejected, StatusOfferIssued, StatusOfferAccepted, StatusContractSigned, StatusCancelled, StatusExpired]
     ApplicantKind:
+      description: Тип заявителя.
       type: string
       enum: [individual, taxi_driver]
       x-enum-varnames: [ApplicantKindIndividual, ApplicantKindTaxiDriver]
     ConsentKind:
+      description: Вид согласия.
       type: string
       enum: [personal_data, credit_bureau, aggregator_data, telematics]
       x-enum-varnames: [ConsentKindPersonalData, ConsentKindCreditBureau, ConsentKindAggregatorData, ConsentKindTelematics]
     DocumentKind:
+      description: Вид документа.
       type: string
       enum: [identity, driver_license, income]
       x-enum-varnames: [DocumentKindIdentity, DocumentKindDriverLicense, DocumentKindIncome]
     Outcome:
+      description: Решение по заявке.
       type: string
       enum: [approve, reject]
       x-enum-varnames: [OutcomeApprove, OutcomeReject]
     ActorKind:
+      description: Кто совершил действие.
       type: string
       enum: [client, underwriter, system]
       x-enum-varnames: [ActorKindClient, ActorKindUnderwriter, ActorKindSystem]
     Consent:
+      description: Данное согласие.
       type: object
       required: [kind, text_version, granted_at]
       properties:
@@ -227,6 +350,7 @@ components:
         text_version: {type: string}
         granted_at: {type: string, format: date-time}
     Document:
+      description: Приложенный документ.
       type: object
       required: [kind, file_id, added_at]
       properties:
@@ -234,12 +358,14 @@ components:
         file_id: {type: string, format: uuid}
         added_at: {type: string, format: date-time}
     Offer:
+      description: Выпущенный офер.
       type: object
       required: [id, expires_at]
       properties:
         id: {type: string, format: uuid}
         expires_at: {type: string, format: date-time}
     Transition:
+      description: Запись истории переходов статуса.
       type: object
       required: [from, to, actor, at]
       properties:
@@ -249,6 +375,7 @@ components:
         reason: {type: string}
         at: {type: string, format: date-time}
     Application:
+      description: Заявка на лизинг.
       type: object
       required: [id, status, version, consents, documents, created_at, updated_at]
       properties:
@@ -277,6 +404,7 @@ components:
         created_at: {type: string, format: date-time}
         updated_at: {type: string, format: date-time}
     ApplicationPage:
+      description: Страница заявок.
       type: object
       required: [items, page]
       properties:
@@ -286,34 +414,42 @@ components:
         page:
           $ref: '../../common/v1/common.yaml#/components/schemas/PageInfo'
     SelectVehicleRequest:
+      description: Выбор автомобиля.
       type: object
       required: [vehicle_id]
       properties:
         vehicle_id: {type: string, format: uuid}
     AttachApplicantRequest:
+      description: Привязка заявителя.
       type: object
       required: [applicant_id, kind]
       properties:
         applicant_id: {type: string, format: uuid}
         kind: {$ref: '#/components/schemas/ApplicantKind'}
     GrantConsentRequest:
+      description: Данные согласия.
       type: object
       required: [text_version]
       properties:
         text_version: {type: string, minLength: 1}
     AttachDocumentRequest:
+      description: Ссылка на загруженный файл.
       type: object
       required: [file_id]
       properties:
         file_id: {type: string, format: uuid}
     CancelRequest:
+      description: Причина отмены.
       type: object
+      required: [reason]
       properties:
-        reason: {type: string, maxLength: 500}
+        reason: {type: string, minLength: 1, maxLength: 500}
     ManualDecisionRequest:
+      description: Решение андеррайтера.
       type: object
       required: [decision_id, outcome, reason]
       properties:
         decision_id: {type: string, format: uuid}
         outcome: {$ref: '#/components/schemas/Outcome'}
         reason: {type: string, minLength: 1, maxLength: 500}
+
