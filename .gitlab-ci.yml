@@ -1,0 +1,9 @@
+# CI библиотеки: общий шаблон arba/infra (ci-templates/go-lib.yml). Образ не собирается.
+# Релиз = git-тег vMAJOR.MINOR.PATCH.
+include:
+  - project: arba/infra
+    ref: main
+    file: ci-templates/go-lib.yml
+
+variables:
+  GO_VERSION: "1.27"
