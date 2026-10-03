@@ -1,0 +1,6 @@
+package: commonv1
+output: gen/go/common/v1/common.gen.go
+generate:
+  models: true
+output-options:
+  skip-prune: true

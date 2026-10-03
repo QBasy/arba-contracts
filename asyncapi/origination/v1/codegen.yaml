@@ -1,0 +1,11 @@
+package: eventsv1
+output: gen/go/origination/events/v1/events.gen.go
+generate:
+  models: true
+output-options:
+  type-mapping:
+    string:
+      formats:
+        uuid:
+          type: uuid.UUID
+          import: uuid

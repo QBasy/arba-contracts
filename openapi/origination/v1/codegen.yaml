@@ -1,0 +1,15 @@
+package: originationv1
+output: gen/go/origination/v1/origination.gen.go
+generate:
+  models: true
+  fiber-v3-server: true
+  client: true
+import-mapping:
+  ../../common/v1/common.yaml: gitlab.arba.kz/arba/contracts/gen/go/common/v1
+output-options:
+  type-mapping:
+    string:
+      formats:
+        uuid:
+          type: uuid.UUID
+          import: uuid

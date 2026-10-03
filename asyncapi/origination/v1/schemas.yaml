@@ -1,0 +1,39 @@
+openapi: 3.1.0
+info:
+  title: Origination event payloads
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Envelope:
+      type: object
+      required: [id, type, tenant_id, occurred_at]
+      properties:
+        id: {type: string, format: uuid}
+        type: {type: string}
+        tenant_id: {type: string, format: uuid}
+        occurred_at: {type: string, format: date-time}
+        request_id: {type: string}
+    ApplicationSubmitted:
+      type: object
+      required: [application_id, applicant_id, applicant_kind, vehicle_id]
+      properties:
+        application_id: {type: string, format: uuid}
+        applicant_id: {type: string, format: uuid}
+        applicant_kind: {type: string, enum: [individual, taxi_driver]}
+        vehicle_id: {type: string, format: uuid}
+    ApplicationStatusChanged:
+      type: object
+      required: [application_id, from, to, actor]
+      properties:
+        application_id: {type: string, format: uuid}
+        from: {type: string}
+        to: {type: string}
+        actor: {type: string, enum: [client, underwriter, system]}
+        reason: {type: string}
+    ApplicationOfferAccepted:
+      type: object
+      required: [application_id, offer_id]
+      properties:
+        application_id: {type: string, format: uuid}
+        offer_id: {type: string, format: uuid}

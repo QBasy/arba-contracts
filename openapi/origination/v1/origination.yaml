@@ -1,0 +1,319 @@
+openapi: 3.1.0
+info:
+  title: Arba Origination API
+  version: 1.0.0
+  description: Заявки на лизинг — от черновика до принятого офера.
+servers:
+  - url: /
+security:
+  - bearer: []
+tags:
+  - name: applications
+paths:
+  /v1/applications:
+    post:
+      operationId: createApplication
+      tags: [applications]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Создана.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+    get:
+      operationId: listApplications
+      tags: [applications]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/Cursor'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema: {$ref: '#/components/schemas/Status'}
+      responses:
+        '200':
+          description: Страница заявок.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApplicationPage'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    get:
+      operationId: getApplication
+      tags: [applications]
+      responses:
+        '200':
+          description: Заявка.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/vehicle:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    put:
+      operationId: selectVehicle
+      tags: [applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SelectVehicleRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/applicant:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    put:
+      operationId: attachApplicant
+      tags: [applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AttachApplicantRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/consents/{kind}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+      - name: kind
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/ConsentKind'}
+    put:
+      operationId: grantConsent
+      tags: [applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/GrantConsentRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+    delete:
+      operationId: revokeConsent
+      tags: [applications]
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/documents/{kind}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+      - name: kind
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/DocumentKind'}
+    put:
+      operationId: attachDocument
+      tags: [applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AttachDocumentRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    post:
+      operationId: submitApplication
+      tags: [applications]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    post:
+      operationId: cancelApplication
+      tags: [applications]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CancelRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/manual-decision:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    post:
+      operationId: resolveManualReview
+      tags: [applications]
+      description: Только роль underwriter.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ManualDecisionRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/offer/accept:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    post:
+      operationId: acceptOffer
+      tags: [applications]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ApplicationID:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  responses:
+    Application:
+      description: Актуальное состояние заявки.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Application'}
+  schemas:
+    Status:
+      type: string
+      enum: [draft, scoring, manual_review, approved, rejected, offer_issued, offer_accepted, contract_signed, cancelled, expired]
+      x-enum-varnames: [StatusDraft, StatusScoring, StatusManualReview, StatusApproved, StatusRejected, StatusOfferIssued, StatusOfferAccepted, StatusContractSigned, StatusCancelled, StatusExpired]
+    ApplicantKind:
+      type: string
+      enum: [individual, taxi_driver]
+      x-enum-varnames: [ApplicantKindIndividual, ApplicantKindTaxiDriver]
+    ConsentKind:
+      type: string
+      enum: [personal_data, credit_bureau, aggregator_data, telematics]
+      x-enum-varnames: [ConsentKindPersonalData, ConsentKindCreditBureau, ConsentKindAggregatorData, ConsentKindTelematics]
+    DocumentKind:
+      type: string
+      enum: [identity, driver_license, income]
+      x-enum-varnames: [DocumentKindIdentity, DocumentKindDriverLicense, DocumentKindIncome]
+    Outcome:
+      type: string
+      enum: [approve, reject]
+      x-enum-varnames: [OutcomeApprove, OutcomeReject]
+    ActorKind:
+      type: string
+      enum: [client, underwriter, system]
+      x-enum-varnames: [ActorKindClient, ActorKindUnderwriter, ActorKindSystem]
+    Consent:
+      type: object
+      required: [kind, text_version, granted_at]
+      properties:
+        kind: {$ref: '#/components/schemas/ConsentKind'}
+        text_version: {type: string}
+        granted_at: {type: string, format: date-time}
+    Document:
+      type: object
+      required: [kind, file_id, added_at]
+      properties:
+        kind: {$ref: '#/components/schemas/DocumentKind'}
+        file_id: {type: string, format: uuid}
+        added_at: {type: string, format: date-time}
+    Offer:
+      type: object
+      required: [id, expires_at]
+      properties:
+        id: {type: string, format: uuid}
+        expires_at: {type: string, format: date-time}
+    Transition:
+      type: object
+      required: [from, to, actor, at]
+      properties:
+        from: {$ref: '#/components/schemas/Status'}
+        to: {$ref: '#/components/schemas/Status'}
+        actor: {$ref: '#/components/schemas/ActorKind'}
+        reason: {type: string}
+        at: {type: string, format: date-time}
+    Application:
+      type: object
+      required: [id, status, version, consents, documents, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/Status'}
+        version: {type: integer, format: int64}
+        applicant_id: {type: string, format: uuid}
+        applicant_kind: {$ref: '#/components/schemas/ApplicantKind'}
+        vehicle_id: {type: string, format: uuid}
+        decision_id: {type: string, format: uuid}
+        contract_id: {type: string, format: uuid}
+        offer: {$ref: '#/components/schemas/Offer'}
+        consents:
+          type: array
+          items: {$ref: '#/components/schemas/Consent'}
+        documents:
+          type: array
+          items: {$ref: '#/components/schemas/Document'}
+        missing:
+          type: array
+          description: Чего не хватает для отправки на скоринг.
+          items: {type: string}
+        history:
+          type: array
+          items: {$ref: '#/components/schemas/Transition'}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ApplicationPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Application'}
+        page:
+          $ref: '../../common/v1/common.yaml#/components/schemas/PageInfo'
+    SelectVehicleRequest:
+      type: object
+      required: [vehicle_id]
+      properties:
+        vehicle_id: {type: string, format: uuid}
+    AttachApplicantRequest:
+      type: object
+      required: [applicant_id, kind]
+      properties:
+        applicant_id: {type: string, format: uuid}
+        kind: {$ref: '#/components/schemas/ApplicantKind'}
+    GrantConsentRequest:
+      type: object
+      required: [text_version]
+      properties:
+        text_version: {type: string, minLength: 1}
+    AttachDocumentRequest:
+      type: object
+      required: [file_id]
+      properties:
+        file_id: {type: string, format: uuid}
+    CancelRequest:
+      type: object
+      properties:
+        reason: {type: string, maxLength: 500}
+    ManualDecisionRequest:
+      type: object
+      required: [decision_id, outcome, reason]
+      properties:
+        decision_id: {type: string, format: uuid}
+        outcome: {$ref: '#/components/schemas/Outcome'}
+        reason: {type: string, minLength: 1, maxLength: 500}
