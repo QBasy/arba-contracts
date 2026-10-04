@@ -1,0 +1,357 @@
+openapi: 3.1.0
+info:
+  title: Arba Scoring API
+  version: 1.0.0
+  description: Наборы правил и объяснимые решения по заявкам.
+servers:
+  - url: /
+security:
+  - bearer: []
+tags:
+  - name: rulesets
+    description: Версионируемые наборы правил тенанта.
+  - name: evaluations
+    description: Оценка заявки и сохранённые решения.
+paths:
+  /v1/facts:
+    get:
+      operationId: listFacts
+      tags: [rulesets]
+      summary: Допустимые факты
+      description: Имена и типы переменных, доступных в выражениях правил.
+      responses:
+        '200':
+          description: Описание фактов.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/FactList'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/rulesets:
+    get:
+      operationId: listRuleSets
+      tags: [rulesets]
+      summary: Версии наборов правил
+      description: Все версии тенанта, новые первыми.
+      responses:
+        '200':
+          description: Версии наборов.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuleSetList'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+    post:
+      operationId: createRuleSet
+      tags: [rulesets]
+      summary: Создать черновик набора
+      description: Создаёт следующую версию набора в статусе draft.
+      x-required-roles: [risk_manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RulesInput'}
+      responses:
+        '201': {$ref: '#/components/responses/RuleSet'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/rulesets/active:
+    get:
+      operationId: getActiveRuleSet
+      tags: [rulesets]
+      summary: Действующий набор
+      description: Последняя опубликованная версия тенанта.
+      responses:
+        '200': {$ref: '#/components/responses/RuleSet'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/rulesets/{version}:
+    parameters:
+      - $ref: '#/components/parameters/Version'
+    get:
+      operationId: getRuleSet
+      tags: [rulesets]
+      summary: Получить версию набора
+      responses:
+        '200': {$ref: '#/components/responses/RuleSet'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/rulesets/{version}/rules:
+    parameters:
+      - $ref: '#/components/parameters/Version'
+    put:
+      operationId: replaceRules
+      tags: [rulesets]
+      summary: Заменить правила черновика
+      description: Только для версии в статусе draft.
+      x-required-roles: [risk_manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RulesInput'}
+      responses:
+        '200': {$ref: '#/components/responses/RuleSet'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/rulesets/{version}/publish:
+    parameters:
+      - $ref: '#/components/parameters/Version'
+    post:
+      operationId: publishRuleSet
+      tags: [rulesets]
+      summary: Опубликовать набор
+      description: Проверяет выражения и делает версию действующей; после публикации набор неизменяем.
+      x-required-roles: [risk_manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
+      responses:
+        '200': {$ref: '#/components/responses/RuleSet'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/evaluations:
+    post:
+      operationId: evaluate
+      tags: [evaluations]
+      summary: Оценить заявку
+      description: Применяет действующий набор правил к фактам и сохраняет неизменяемое решение.
+      x-required-roles: [system, underwriter]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EvaluationRequest'}
+      responses:
+        '201':
+          description: Решение принято.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Decision'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/decisions:
+    get:
+      operationId: listDecisions
+      tags: [evaluations]
+      summary: Решения по объекту оценки
+      description: Все решения по заявке, новые первыми.
+      parameters:
+        - name: subject_id
+          in: query
+          required: true
+          description: Идентификатор заявки.
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Решения.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DecisionList'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/decisions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Идентификатор решения.
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getDecision
+      tags: [evaluations]
+      summary: Получить решение
+      responses:
+        '200':
+          description: Решение с объяснением.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Decision'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+components:
+  securitySchemes:
+    bearer:
+      description: JWT; tenant_id и roles берутся из claims.
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Version:
+      name: version
+      in: path
+      required: true
+      description: Номер версии набора.
+      schema: {type: integer, format: int64, minimum: 1}
+  responses:
+    RuleSet:
+      description: Набор правил.
+      headers:
+        ETag: {$ref: '../../common/v1/common.yaml#/components/headers/ETag'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RuleSet'}
+  schemas:
+    Effect:
+      description: Что происходит, когда правило сработало.
+      type: string
+      enum: [reject, refer]
+      x-enum-varnames: [EffectReject, EffectRefer]
+    Outcome:
+      description: Итог оценки.
+      type: string
+      enum: [approve, manual_review, reject]
+      x-enum-varnames: [OutcomeApprove, OutcomeManualReview, OutcomeReject]
+    RuleSetStatus:
+      description: Статус набора.
+      type: string
+      enum: [draft, published]
+      x-enum-varnames: [RuleSetStatusDraft, RuleSetStatusPublished]
+    FactKind:
+      description: Тип факта.
+      type: string
+      enum: [int, float, string, bool]
+      x-enum-varnames: [FactKindInt, FactKindFloat, FactKindString, FactKindBool]
+    Fact:
+      type: object
+      required: [name, kind, required]
+      properties:
+        name: {type: string}
+        kind: {$ref: '#/components/schemas/FactKind'}
+        required: {type: boolean}
+        description: {type: string}
+    FactList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Fact'}
+    Rule:
+      type: object
+      required: [code, expression, effect, reason]
+      properties:
+        code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{1,63}$'
+          description: Уникальный в наборе код правила.
+        expression:
+          type: string
+          maxLength: 1000
+          description: Булево выражение; true означает, что правило сработало.
+          examples: ["age_years < 21"]
+        effect: {$ref: '#/components/schemas/Effect'}
+        reason:
+          type: string
+          maxLength: 300
+          description: Объяснение для андеррайтера и клиента.
+    RulesInput:
+      type: object
+      required: [rules]
+      properties:
+        rules:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/Rule'}
+    RuleSet:
+      type: object
+      required: [version, status, rules, revision, created_at]
+      properties:
+        version: {type: integer, format: int64}
+        status: {$ref: '#/components/schemas/RuleSetStatus'}
+        rules:
+          type: array
+          items: {$ref: '#/components/schemas/Rule'}
+        revision:
+          type: integer
+          format: int64
+          description: Значение ETag для If-Match.
+        created_at: {type: string, format: date-time}
+        published_at: {type: string, format: date-time}
+    EvaluationRequest:
+      type: object
+      required: [subject_id, facts]
+      properties:
+        subject_id:
+          type: string
+          format: uuid
+          description: Заявка, по которой принимается решение.
+        facts:
+          type: object
+          description: Значения фактов; набор и типы — GET /v1/facts.
+          additionalProperties: true
+    FiredRule:
+      type: object
+      required: [code, effect, reason]
+      properties:
+        code: {type: string}
+        effect: {$ref: '#/components/schemas/Effect'}
+        reason: {type: string}
+        error:
+          type: string
+          description: Заполнено, если выражение не удалось вычислить; такое правило направляет заявку на ручное рассмотрение.
+    Decision:
+      type: object
+      required: [id, subject_id, outcome, ruleset_version, fired, facts, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        subject_id: {type: string, format: uuid}
+        outcome: {$ref: '#/components/schemas/Outcome'}
+        ruleset_version: {type: integer, format: int64}
+        fired:
+          type: array
+          items: {$ref: '#/components/schemas/FiredRule'}
+        facts:
+          type: object
+          additionalProperties: true
+        created_at: {type: string, format: date-time}
+    RuleSetList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/RuleSet'}
+    DecisionList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Decision'}

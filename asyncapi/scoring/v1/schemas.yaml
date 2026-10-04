@@ -1,0 +1,36 @@
+openapi: 3.1.0
+info:
+  title: Scoring event payloads
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Envelope:
+      type: object
+      description: Общие поля каждого события.
+      required: [id, type, tenant_id, occurred_at]
+      properties:
+        id: {type: string, format: uuid}
+        type: {type: string}
+        tenant_id: {type: string, format: uuid}
+        occurred_at: {type: string, format: date-time}
+        request_id: {type: string}
+    DecisionMade:
+      description: По заявке принято решение.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [decision_id, subject_id, outcome, ruleset_version]
+          properties:
+            decision_id: {type: string, format: uuid}
+            subject_id: {type: string, format: uuid}
+            outcome: {type: string, enum: [approve, manual_review, reject]}
+            ruleset_version: {type: integer, format: int64}
+    RuleSetPublished:
+      description: Опубликована новая версия набора правил.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [version]
+          properties:
+            version: {type: integer, format: int64}
