@@ -26,7 +26,7 @@ gen-ts:
 	$(TSGEN) openapi/servicing/v1/servicing.yaml -o gen/ts/servicing/v1.ts
 
 lint:
-	$(VACUUM) lint -d -n error openapi/common/v1/common.yaml openapi/origination/v1/origination.yaml openapi/scoring/v1/scoring.yaml openapi/pricing/v1/pricing.yaml
+	$(VACUUM) lint -d -n error openapi/common/v1/common.yaml openapi/origination/v1/origination.yaml openapi/scoring/v1/scoring.yaml openapi/pricing/v1/pricing.yaml openapi/servicing/v1/servicing.yaml
 
 breaking:
 	$(OASDIFF) breaking origin/main:openapi/origination/v1/origination.yaml openapi/origination/v1/origination.yaml --fail-on ERR

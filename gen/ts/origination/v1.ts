@@ -74,6 +74,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/applications/{id}/terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Идентификатор заявки. */
+                id: components["parameters"]["ApplicationID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Задать условия лизинга
+         * @description Шаг 1. Продукт, цена автомобиля, аванс, срок и декларируемые данные заявителя для скоринга. Доступно только в статусе draft.
+         */
+        put: operations["setTerms"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/applications/{id}/applicant": {
         parameters: {
             query?: never;
@@ -165,7 +188,7 @@ export interface paths {
         put?: never;
         /**
          * Отправить на скоринг
-         * @description Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
+         * @description Проверяет комплектность, переводит заявку в scoring и запускает автоматические шаги (скоринг и выпуск офера). Если смежный сервис недоступен, заявка остаётся в своём статусе, шаг повторяется через advance. При нехватке данных возвращает 422 incomplete_application со списком в errors.
          */
         post: operations["submitApplication"];
         delete?: never;
@@ -237,6 +260,52 @@ export interface paths {
          * @description Доступно клиенту, пока офер не истёк.
          */
         post: operations["acceptOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/applications/{id}/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Идентификатор заявки. */
+                id: components["parameters"]["ApplicationID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Продолжить обработку
+         * @description Повторяет автоматический шаг, который не завершился из-за сбоя смежного сервиса (scoring → скоринг, approved → выпуск офера). Если шаг не нужен, возвращает заявку без изменений.
+         */
+        post: operations["advanceApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/applications/{id}/contract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Идентификатор заявки. */
+                id: components["parameters"]["ApplicationID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Открыть договор
+         * @description Для заявки в статусе offer_accepted открывает договор в servicing по снимку графика из офера и переводит заявку в contract_signed. Повтор безопасен.
+         */
+        post: operations["activateContract"];
         delete?: never;
         options?: never;
         head?: never;
@@ -325,6 +394,8 @@ export interface components {
             /** Format: uuid */
             contract_id?: string;
             offer?: components["schemas"]["Offer"];
+            terms?: components["schemas"]["LeaseTerms"];
+            declared?: components["schemas"]["DeclaredProfile"];
             consents: components["schemas"]["Consent"][];
             documents: components["schemas"]["Document"][];
             /** @description Чего не хватает для отправки на скоринг. */
@@ -339,6 +410,25 @@ export interface components {
         ApplicationPage: {
             items: components["schemas"]["Application"][];
             page: components["schemas"]["PageInfo"];
+        };
+        /** @description Условия лизинга, на которых считаются офер и скоринг. */
+        LeaseTerms: {
+            /** Format: uuid */
+            product_id: string;
+            vehicle_price: components["schemas"]["Money"];
+            down_payment: components["schemas"]["Money"];
+            term_months: number;
+        };
+        /** @description Данные заявителя, которые он указал сам; до подключения источников (бюро, агрегатор) используются в скоринге как есть. */
+        DeclaredProfile: {
+            age_years: number;
+            monthly_income: components["schemas"]["Money"];
+            monthly_obligations: components["schemas"]["Money"];
+        };
+        /** @description Условия и декларируемые данные. */
+        SetTermsRequest: {
+            terms: components["schemas"]["LeaseTerms"];
+            declared: components["schemas"]["DeclaredProfile"];
         };
         /** @description Выбор автомобиля. */
         SelectVehicleRequest: {
@@ -399,6 +489,20 @@ export interface components {
             code?: string;
             /** @description Ошибки по полям. */
             errors?: components["schemas"]["FieldError"][];
+        };
+        /**
+         * @description Код валюты ISO 4217.
+         * @enum {string}
+         */
+        Currency: "KZT";
+        /** @description Денежная сумма в минимальных единицах (тиын). */
+        Money: {
+            /**
+             * @description Сумма в тиынах.
+             * @example 1500000
+             */
+            amount_minor: string;
+            currency: components["schemas"]["Currency"];
         };
         /** @description Состояние курсорной пагинации. */
         PageInfo: {
@@ -633,6 +737,36 @@ export interface operations {
             default: components["responses"]["Problem"];
         };
     };
+    setTerms: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description Идентификатор заявки. */
+                id: components["parameters"]["ApplicationID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetTermsRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
+            default: components["responses"]["Problem"];
+        };
+    };
     attachApplicant: {
         parameters: {
             query?: never;
@@ -852,6 +986,58 @@ export interface operations {
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
                 /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
                 "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description Идентификатор заявки. */
+                id: components["parameters"]["ApplicationID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
+            default: components["responses"]["Problem"];
+        };
+    };
+    advanceApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Идентификатор заявки. */
+                id: components["parameters"]["ApplicationID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Application"];
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Unprocessable"];
+            default: components["responses"]["Problem"];
+        };
+    };
+    activateContract: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path: {
                 /** @description Идентификатор заявки. */

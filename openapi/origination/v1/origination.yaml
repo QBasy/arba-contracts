@@ -94,6 +94,31 @@ paths:
         '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
         '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
         default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/terms:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    put:
+      operationId: setTerms
+      tags: [applications]
+      summary: Задать условия лизинга
+      description: Шаг 1. Продукт, цена автомобиля, аванс, срок и декларируемые данные заявителя для скоринга. Доступно только в статусе draft.
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SetTermsRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications/{id}/applicant:
     parameters:
       - $ref: '#/components/parameters/ApplicationID'
@@ -201,7 +226,7 @@ paths:
       operationId: submitApplication
       tags: [applications]
       summary: Отправить на скоринг
-      description: Проверяет комплектность и переводит заявку в scoring. При нехватке данных возвращает 422 incomplete_application со списком в errors.
+      description: Проверяет комплектность, переводит заявку в scoring и запускает автоматические шаги (скоринг и выпуск офера). Если смежный сервис недоступен, заявка остаётся в своём статусе, шаг повторяется через advance. При нехватке данных возвращает 422 incomplete_application со списком в errors.
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
         - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
@@ -278,6 +303,48 @@ paths:
       parameters:
         - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
         - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/advance:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    post:
+      operationId: advanceApplication
+      tags: [applications]
+      summary: Продолжить обработку
+      description: Повторяет автоматический шаг, который не завершился из-за сбоя смежного сервиса (scoring → скоринг, approved → выпуск офера). Если шаг не нужен, возвращает заявку без изменений.
+      x-required-roles: [system, manager, underwriter]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200': {$ref: '#/components/responses/Application'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/applications/{id}/contract:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationID'
+    post:
+      operationId: activateContract
+      tags: [applications]
+      summary: Открыть договор
+      description: Для заявки в статусе offer_accepted открывает договор в servicing по снимку графика из офера и переводит заявку в contract_signed. Повтор безопасен.
+      x-required-roles: [system, manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200': {$ref: '#/components/responses/Application'}
         '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
@@ -388,6 +455,8 @@ components:
         decision_id: {type: string, format: uuid}
         contract_id: {type: string, format: uuid}
         offer: {$ref: '#/components/schemas/Offer'}
+        terms: {$ref: '#/components/schemas/LeaseTerms'}
+        declared: {$ref: '#/components/schemas/DeclaredProfile'}
         consents:
           type: array
           items: {$ref: '#/components/schemas/Consent'}
@@ -413,6 +482,30 @@ components:
           items: {$ref: '#/components/schemas/Application'}
         page:
           $ref: '../../common/v1/common.yaml#/components/schemas/PageInfo'
+    LeaseTerms:
+      description: Условия лизинга, на которых считаются офер и скоринг.
+      type: object
+      required: [product_id, vehicle_price, down_payment, term_months]
+      properties:
+        product_id: {type: string, format: uuid}
+        vehicle_price: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        down_payment: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        term_months: {type: integer, minimum: 1}
+    DeclaredProfile:
+      description: Данные заявителя, которые он указал сам; до подключения источников (бюро, агрегатор) используются в скоринге как есть.
+      type: object
+      required: [age_years, monthly_income, monthly_obligations]
+      properties:
+        age_years: {type: integer, minimum: 0, maximum: 150}
+        monthly_income: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        monthly_obligations: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    SetTermsRequest:
+      description: Условия и декларируемые данные.
+      type: object
+      required: [terms, declared]
+      properties:
+        terms: {$ref: '#/components/schemas/LeaseTerms'}
+        declared: {$ref: '#/components/schemas/DeclaredProfile'}
     SelectVehicleRequest:
       description: Выбор автомобиля.
       type: object
