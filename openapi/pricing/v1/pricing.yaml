@@ -1,0 +1,328 @@
+openapi: 3.1.0
+info:
+  title: Arba Pricing API
+  version: 1.0.0
+  description: Лизинговые продукты, расчёт графика платежей и ГЭСВ, офер с контролем предела.
+servers:
+  - url: /
+security:
+  - bearer: []
+tags:
+  - name: products
+    description: Версионируемые лизинговые продукты тенанта.
+  - name: quotes
+    description: Расчёт и выпуск оферов.
+paths:
+  /v1/products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: Список версий продуктов
+      description: Новые версии первыми.
+      parameters:
+        - name: code
+          in: query
+          description: Фильтр по коду продукта.
+          schema: {type: string}
+        - name: status
+          in: query
+          description: Фильтр по статусу.
+          schema: {$ref: '#/components/schemas/ProductStatus'}
+      responses:
+        '200':
+          description: Версии продуктов.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProductList'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Создать черновик версии продукта
+      description: Новая версия продукта с тем же code получает следующий номер версии.
+      x-required-roles: [product_manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductInput'}
+      responses:
+        '201': {$ref: '#/components/responses/Product'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/products/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ProductID'
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Получить продукт
+      responses:
+        '200': {$ref: '#/components/responses/Product'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+    put:
+      operationId: replaceProduct
+      tags: [products]
+      summary: Изменить условия черновика
+      description: Только для версии в статусе draft.
+      x-required-roles: [product_manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductInput'}
+      responses:
+        '200': {$ref: '#/components/responses/Product'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/products/{id}/publish:
+    parameters:
+      - $ref: '#/components/parameters/ProductID'
+    post:
+      operationId: publishProduct
+      tags: [products]
+      summary: Опубликовать продукт
+      description: Compliance guard — публикация отклоняется, если ГЭСВ на границах условий выше предела тенанта. После публикации версия неизменяема.
+      x-required-roles: [product_manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IfMatch'
+      responses:
+        '200': {$ref: '#/components/responses/Product'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '412': {$ref: '../../common/v1/common.yaml#/components/responses/PreconditionFailed'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/calculations:
+    post:
+      operationId: calculate
+      tags: [quotes]
+      summary: Предварительный расчёт
+      description: Считает график и ГЭСВ без сохранения. Не создаёт оферов, ограничения предела не применяет, а сообщает within_limit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CalculationRequest'}
+      responses:
+        '200':
+          description: Результат расчёта.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Calculation'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/quotes:
+    post:
+      operationId: issueQuote
+      tags: [quotes]
+      summary: Выпустить офер
+      description: Сохраняет неизменяемый расчёт со сроком действия. При ГЭСВ выше предела — 422 gesv_limit_exceeded.
+      x-required-roles: [system, manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/QuoteRequest'}
+      responses:
+        '201':
+          description: Офер выпущен.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Quote'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/quotes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Идентификатор офера.
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getQuote
+      tags: [quotes]
+      summary: Получить офер
+      responses:
+        '200':
+          description: Офер.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Quote'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+components:
+  securitySchemes:
+    bearer:
+      description: JWT; tenant_id и roles берутся из claims.
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProductID:
+      name: id
+      in: path
+      required: true
+      description: Идентификатор версии продукта.
+      schema: {type: string, format: uuid}
+  responses:
+    Product:
+      description: Версия продукта.
+      headers:
+        ETag: {$ref: '../../common/v1/common.yaml#/components/headers/ETag'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Product'}
+  schemas:
+    ProductStatus:
+      description: Статус версии продукта.
+      type: string
+      enum: [draft, published]
+      x-enum-varnames: [ProductStatusDraft, ProductStatusPublished]
+    Frequency:
+      description: Частота платежей.
+      type: string
+      enum: [monthly, weekly]
+      x-enum-varnames: [FrequencyMonthly, FrequencyWeekly]
+    Terms:
+      type: object
+      description: Условия продукта. Проценты заданы в базисных пунктах (100 = 1%).
+      required: [frequency, annual_rate_bps, min_term_months, max_term_months, min_down_payment_bps, upfront_fee_bps, residual_bps]
+      properties:
+        frequency: {$ref: '#/components/schemas/Frequency'}
+        annual_rate_bps: {type: integer, minimum: 0, maximum: 10000, description: Номинальная годовая ставка.}
+        min_term_months: {type: integer, minimum: 1, maximum: 120}
+        max_term_months: {type: integer, minimum: 1, maximum: 120}
+        min_down_payment_bps: {type: integer, minimum: 0, maximum: 9000, description: Минимальный аванс от цены автомобиля.}
+        upfront_fee_bps: {type: integer, minimum: 0, maximum: 2000, description: Единовременная комиссия от суммы финансирования.}
+        residual_bps: {type: integer, minimum: 0, maximum: 5000, description: 'Выкупная стоимость от цены автомобиля, выплачивается в конце срока.'}
+    ProductInput:
+      type: object
+      required: [code, name, terms]
+      properties:
+        code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{1,31}$'
+          description: Код продукта; версии с одним кодом образуют историю.
+        name: {type: string, minLength: 1, maxLength: 120}
+        terms: {$ref: '#/components/schemas/Terms'}
+    Product:
+      type: object
+      required: [id, code, version, name, status, terms, revision, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string}
+        version: {type: integer, format: int64}
+        name: {type: string}
+        status: {$ref: '#/components/schemas/ProductStatus'}
+        terms: {$ref: '#/components/schemas/Terms'}
+        revision: {type: integer, format: int64, description: 'Значение ETag для If-Match.'}
+        created_at: {type: string, format: date-time}
+        published_at: {type: string, format: date-time}
+    ProductList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Product'}
+    CalculationRequest:
+      type: object
+      required: [product_id, vehicle_price, down_payment, term_months]
+      properties:
+        product_id: {type: string, format: uuid}
+        vehicle_price: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        down_payment: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        term_months: {type: integer, minimum: 1, maximum: 120}
+        start_date:
+          type: string
+          format: date
+          description: Дата выдачи; по умолчанию текущая дата.
+    QuoteRequest:
+      allOf:
+        - $ref: '#/components/schemas/CalculationRequest'
+        - type: object
+          properties:
+            application_id:
+              type: string
+              format: uuid
+              description: Заявка, для которой выпускается офер.
+    Installment:
+      type: object
+      required: [number, due_date, payment, principal, interest, balance]
+      properties:
+        number: {type: integer}
+        due_date: {type: string, format: date}
+        payment: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        principal: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        interest: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        balance: {$ref: '../../common/v1/common.yaml#/components/schemas/Money', description: 'Остаток долга после платежа, включая выкупную стоимость.'}
+    Calculation:
+      type: object
+      required: [product_id, product_version, frequency, vehicle_price, down_payment, financed_amount, upfront_fee, residual_value, term_months, periods, annual_rate_bps, gesv_bps, gesv_limit_bps, within_limit, total_payments, total_cost, schedule]
+      properties:
+        product_id: {type: string, format: uuid}
+        product_version: {type: integer, format: int64}
+        frequency: {$ref: '#/components/schemas/Frequency'}
+        vehicle_price: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        down_payment: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        financed_amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        upfront_fee: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        residual_value: {$ref: '../../common/v1/common.yaml#/components/schemas/Money', description: 'Выкупной платёж в конце срока.'}
+        term_months: {type: integer}
+        periods: {type: integer, description: 'Число платежей по графику.'}
+        annual_rate_bps: {type: integer}
+        gesv_bps: {type: integer, description: 'ГЭСВ в базисных пунктах, округлена вверх.'}
+        gesv_limit_bps: {type: integer, description: 'Предел ГЭСВ тенанта.'}
+        within_limit: {type: boolean}
+        total_payments: {$ref: '../../common/v1/common.yaml#/components/schemas/Money', description: 'Сумма всех платежей графика и выкупа.'}
+        total_cost: {$ref: '../../common/v1/common.yaml#/components/schemas/Money', description: 'Все выплаты клиента сверх цены автомобиля за вычетом аванса: проценты и комиссия.'}
+        schedule:
+          type: array
+          items: {$ref: '#/components/schemas/Installment'}
+    Quote:
+      allOf:
+        - $ref: '#/components/schemas/Calculation'
+        - type: object
+          required: [id, expires_at, created_at]
+          properties:
+            id: {type: string, format: uuid}
+            application_id: {type: string, format: uuid}
+            expires_at: {type: string, format: date-time}
+            created_at: {type: string, format: date-time}

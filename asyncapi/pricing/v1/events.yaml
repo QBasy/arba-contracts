@@ -1,0 +1,37 @@
+asyncapi: 3.0.0
+info:
+  title: Arba Pricing events
+  version: 1.0.0
+defaultContentType: application/json
+channels:
+  quoteIssued:
+    address: arba.pricing.v1.quote.issued
+    messages:
+      quoteIssued: {$ref: '#/components/messages/QuoteIssued'}
+  productPublished:
+    address: arba.pricing.v1.product.published
+    messages:
+      productPublished: {$ref: '#/components/messages/ProductPublished'}
+operations:
+  publishQuoteIssued:
+    action: send
+    channel: {$ref: '#/channels/quoteIssued'}
+  publishProductPublished:
+    action: send
+    channel: {$ref: '#/channels/productPublished'}
+components:
+  messages:
+    QuoteIssued:
+      headers:
+        $ref: '#/components/schemas/Headers'
+      payload: {$ref: 'schemas.yaml#/components/schemas/QuoteIssued'}
+    ProductPublished:
+      headers:
+        $ref: '#/components/schemas/Headers'
+      payload: {$ref: 'schemas.yaml#/components/schemas/ProductPublished'}
+  schemas:
+    Headers:
+      type: object
+      properties:
+        Arba-Key: {type: string, description: Ключ дедупликации и порядка.}
+        Arba-Created-At: {type: string, format: date-time}

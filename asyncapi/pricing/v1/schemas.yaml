@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info:
+  title: Pricing event payloads
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Envelope:
+      type: object
+      description: Общие поля каждого события.
+      required: [id, type, tenant_id, occurred_at]
+      properties:
+        id: {type: string, format: uuid}
+        type: {type: string}
+        tenant_id: {type: string, format: uuid}
+        occurred_at: {type: string, format: date-time}
+        request_id: {type: string}
+    QuoteIssued:
+      description: Выпущен офер.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [quote_id, product_id, product_version, gesv_bps, expires_at]
+          properties:
+            quote_id: {type: string, format: uuid}
+            application_id: {type: string, format: uuid}
+            product_id: {type: string, format: uuid}
+            product_version: {type: integer, format: int64}
+            gesv_bps: {type: integer}
+            expires_at: {type: string, format: date-time}
+    ProductPublished:
+      description: Опубликована версия продукта.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [product_id, code, version]
+          properties:
+            product_id: {type: string, format: uuid}
+            code: {type: string}
+            version: {type: integer, format: int64}
