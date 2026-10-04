@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 	"uuid"
@@ -19,7 +20,7 @@ type stub struct {
 }
 
 func (s *stub) CreateApplication(c fiber.Ctx, p v1.CreateApplicationParams) error {
-	s.key = p.IdempotencyKey
+	s.key = strings.Clone(p.IdempotencyKey)
 	return c.Status(http.StatusCreated).JSON(v1.Application{
 		Id:        uuid.New(),
 		Status:    v1.StatusDraft,
@@ -65,7 +66,7 @@ func TestClientServerRoundTrip(t *testing.T) {
 	if resp.StatusCode() != http.StatusCreated || resp.JSON201 == nil || resp.JSON201.Status != v1.StatusDraft {
 		t.Fatalf("unexpected response: %d %s", resp.StatusCode(), resp.Body)
 	}
-	if s.key != "key-12345678" {
+	if s.key != requestID {
 		t.Fatalf("idempotency key not passed: %q", s.key)
 	}
 }
