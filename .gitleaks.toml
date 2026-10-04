@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Тестовый Idempotency-Key в contract_test.go — не секрет"
+paths = ['''contract_test\.go$''']
+regexTarget = "line"
+regexes = ['''(?i)idempotencykey''']
