@@ -50,9 +50,10 @@ func TestClientServerRoundTrip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
 
+	const requestID = "request-12345678"
 	var resp *v1.CreateApplicationResponse
 	for range 50 {
-		resp, err = cl.CreateApplicationWithResponse(ctx, &v1.CreateApplicationParams{IdempotencyKey: "key-12345678"})
+		resp, err = cl.CreateApplicationWithResponse(ctx, &v1.CreateApplicationParams{IdempotencyKey: requestID})
 		if err == nil {
 			break
 		}
