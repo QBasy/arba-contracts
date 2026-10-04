@@ -15,12 +15,15 @@ gen-go:
 	$(OAPI) -config asyncapi/scoring/v1/codegen.yaml asyncapi/scoring/v1/schemas.yaml
 	$(OAPI) -config openapi/pricing/v1/codegen.yaml openapi/pricing/v1/pricing.yaml
 	$(OAPI) -config asyncapi/pricing/v1/codegen.yaml asyncapi/pricing/v1/schemas.yaml
+	$(OAPI) -config openapi/servicing/v1/codegen.yaml openapi/servicing/v1/servicing.yaml
+	$(OAPI) -config asyncapi/servicing/v1/codegen.yaml asyncapi/servicing/v1/schemas.yaml
 
 gen-ts:
 	$(TSGEN) openapi/common/v1/common.yaml -o gen/ts/common/v1.ts
 	$(TSGEN) openapi/origination/v1/origination.yaml -o gen/ts/origination/v1.ts
 	$(TSGEN) openapi/scoring/v1/scoring.yaml -o gen/ts/scoring/v1.ts
 	$(TSGEN) openapi/pricing/v1/pricing.yaml -o gen/ts/pricing/v1.ts
+	$(TSGEN) openapi/servicing/v1/servicing.yaml -o gen/ts/servicing/v1.ts
 
 lint:
 	$(VACUUM) lint -d -n error openapi/common/v1/common.yaml openapi/origination/v1/origination.yaml openapi/scoring/v1/scoring.yaml openapi/pricing/v1/pricing.yaml

@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Servicing event payloads
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Envelope:
+      type: object
+      description: Общие поля каждого события.
+      required: [id, type, tenant_id, occurred_at]
+      properties:
+        id: {type: string, format: uuid}
+        type: {type: string}
+        tenant_id: {type: string, format: uuid}
+        occurred_at: {type: string, format: date-time}
+        request_id: {type: string}
+    ContractOpened:
+      description: Договор принят на обслуживание.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [contract_id, installments]
+          properties:
+            contract_id: {type: string, format: uuid}
+            application_id: {type: string, format: uuid}
+            customer_id: {type: string, format: uuid}
+            installments: {type: integer}
+    PaymentReceived:
+      description: Оплата принята и распределена.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [payment_id, contract_id, amount_minor, received_at]
+          properties:
+            payment_id: {type: string, format: uuid}
+            contract_id: {type: string, format: uuid}
+            amount_minor: {type: string, description: Сумма в тиынах.}
+            received_at: {type: string, format: date}
+    ContractClosed:
+      description: Договор закрыт.
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [contract_id, reason]
+          properties:
+            contract_id: {type: string, format: uuid}
+            reason: {type: string, enum: [redeemed, early_repayment]}

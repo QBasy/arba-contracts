@@ -1,0 +1,402 @@
+openapi: 3.1.0
+info:
+  title: Arba Servicing API
+  version: 1.0.0
+  description: Договоры лизинга на обслуживании, график, оплаты, просрочка и выкуп.
+servers:
+  - url: /
+security:
+  - bearer: []
+tags:
+  - name: contracts
+    description: Договоры и их график.
+  - name: payments
+    description: Приём оплат и распределение.
+paths:
+  /v1/contracts:
+    post:
+      operationId: openContract
+      tags: [contracts]
+      summary: Принять договор на обслуживание
+      description: Вызывается после подписания договора. График передаётся снимком из офера и не пересчитывается.
+      x-required-roles: [system]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/OpenContract'}
+      responses:
+        '201': {$ref: '#/components/responses/Contract'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/contracts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ContractID'
+    get:
+      operationId: getContract
+      tags: [contracts]
+      summary: Договор с графиком и фактом оплат
+      x-required-roles: [system, manager]
+      responses:
+        '200': {$ref: '#/components/responses/Contract'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/contracts/{id}/standing:
+    parameters:
+      - $ref: '#/components/parameters/ContractID'
+      - $ref: '#/components/parameters/AsOf'
+    get:
+      operationId: getStanding
+      tags: [contracts]
+      summary: Состояние на дату
+      description: Просрочка, бакет, пеня и прогресс выкупа на указанную дату.
+      x-required-roles: [system, manager]
+      responses:
+        '200':
+          description: Состояние договора.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Standing'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/contracts/{id}/payoff:
+    parameters:
+      - $ref: '#/components/parameters/ContractID'
+      - $ref: '#/components/parameters/AsOf'
+    get:
+      operationId: getPayoff
+      tags: [contracts]
+      summary: Сумма досрочного погашения на дату
+      x-required-roles: [system, manager]
+      responses:
+        '200':
+          description: Сумма и её состав.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Payoff'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/contracts/{id}/payments:
+    parameters:
+      - $ref: '#/components/parameters/ContractID'
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: Оплаты по договору
+      description: Новые первыми.
+      x-required-roles: [system, manager]
+      responses:
+        '200':
+          description: Оплаты.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PaymentList'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+    post:
+      operationId: recordPayment
+      tags: [payments]
+      summary: Зарегистрировать оплату
+      description: Повтор с тем же external_ref возвращает ранее принятую оплату с кодом 200.
+      x-required-roles: [system, manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PaymentRequest'}
+      responses:
+        '200':
+          description: Оплата уже была принята ранее.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Payment'}
+        '201':
+          description: Оплата принята и распределена.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Payment'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '404': {$ref: '../../common/v1/common.yaml#/components/responses/NotFound'}
+        '409': {$ref: '../../common/v1/common.yaml#/components/responses/Conflict'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+  /v1/payments/import:
+    post:
+      operationId: importPayments
+      tags: [payments]
+      summary: Пакетный импорт оплат
+      description: Каждая строка обрабатывается независимо, результат возвращается по строкам.
+      x-required-roles: [manager]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ImportRequest'}
+      responses:
+        '200':
+          description: Результат по строкам.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ImportResult'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        '422': {$ref: '../../common/v1/common.yaml#/components/responses/Unprocessable'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
+components:
+  securitySchemes:
+    bearer:
+      description: JWT; tenant_id и roles берутся из claims.
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ContractID:
+      name: id
+      in: path
+      required: true
+      description: Идентификатор договора.
+      schema: {type: string, format: uuid}
+    AsOf:
+      name: as_of
+      in: query
+      required: false
+      description: Дата расчёта; по умолчанию сегодня.
+      schema: {type: string, format: date}
+  responses:
+    Contract:
+      description: Договор.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Contract'}
+  schemas:
+    ContractStatus:
+      description: Статус договора.
+      type: string
+      enum: [active, closed]
+      x-enum-varnames: [ContractStatusActive, ContractStatusClosed]
+    CloseReason:
+      description: Причина закрытия.
+      type: string
+      enum: [redeemed, early_repayment]
+      x-enum-varnames: [CloseReasonRedeemed, CloseReasonEarlyRepayment]
+    InstallmentStatus:
+      description: Статус платежа графика.
+      type: string
+      enum: [open, paid, waived]
+      x-enum-varnames: [InstallmentStatusOpen, InstallmentStatusPaid, InstallmentStatusWaived]
+    PaymentSource:
+      description: Источник оплаты.
+      type: string
+      enum: [manual, import, gateway]
+      x-enum-varnames: [PaymentSourceManual, PaymentSourceImport, PaymentSourceGateway]
+    PaymentKind:
+      description: 'regular распределяется по графику, early_repayment должна равняться сумме досрочного погашения.'
+      type: string
+      enum: [regular, early_repayment]
+      x-enum-varnames: [PaymentKindRegular, PaymentKindEarlyRepayment]
+    Bucket:
+      description: Бакет просрочки.
+      type: string
+      enum: [current, d1_30, d31_60, d60_plus]
+      x-enum-varnames: [BucketCurrent, BucketD1To30, BucketD31To60, BucketD60Plus]
+    InstallmentInput:
+      type: object
+      required: [number, due_date, principal, interest]
+      properties:
+        number: {type: integer, minimum: 1}
+        due_date: {type: string, format: date}
+        principal: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        interest: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    OpenContract:
+      type: object
+      required: [financed_amount, residual_value, schedule]
+      properties:
+        application_id: {type: string, format: uuid}
+        customer_id: {type: string, format: uuid}
+        financed_amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        residual_value: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        schedule:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items: {$ref: '#/components/schemas/InstallmentInput'}
+    InstallmentState:
+      type: object
+      required: [number, due_date, principal, interest, paid_principal, paid_interest, penalty, paid_penalty, status]
+      properties:
+        number: {type: integer}
+        due_date: {type: string, format: date}
+        principal: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        interest: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        paid_principal: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        paid_interest: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        penalty: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        paid_penalty: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        status: {$ref: '#/components/schemas/InstallmentStatus'}
+    Buyout:
+      type: object
+      description: Выкупной платёж, вносится в дату последнего платежа.
+      required: [due_date, amount, paid]
+      properties:
+        due_date: {type: string, format: date}
+        amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        paid: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    Contract:
+      type: object
+      required: [id, status, financed_amount, buyout, schedule, revision, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        application_id: {type: string, format: uuid}
+        customer_id: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ContractStatus'}
+        close_reason: {$ref: '#/components/schemas/CloseReason'}
+        financed_amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        buyout: {$ref: '#/components/schemas/Buyout'}
+        schedule:
+          type: array
+          items: {$ref: '#/components/schemas/InstallmentState'}
+        revision: {type: integer, format: int64}
+        created_at: {type: string, format: date-time}
+        closed_at: {type: string, format: date-time}
+    Redemption:
+      type: object
+      description: Прогресс выкупа.
+      required: [paid_bps, paid, remaining]
+      properties:
+        paid_bps: {type: integer, minimum: 0, maximum: 10000, description: Доля выкупленного в базисных пунктах.}
+        paid: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        remaining: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    NextInstallment:
+      type: object
+      required: [number, due_date, amount]
+      properties:
+        number: {type: integer}
+        due_date: {type: string, format: date}
+        amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    Standing:
+      type: object
+      required: [contract_id, as_of, status, days_overdue, bucket, overdue_amount, penalty_outstanding, outstanding_principal, redemption]
+      properties:
+        contract_id: {type: string, format: uuid}
+        as_of: {type: string, format: date}
+        status: {$ref: '#/components/schemas/ContractStatus'}
+        days_overdue: {type: integer, minimum: 0}
+        bucket: {$ref: '#/components/schemas/Bucket'}
+        overdue_amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        penalty_outstanding: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        outstanding_principal: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        next_installment: {$ref: '#/components/schemas/NextInstallment'}
+        redemption: {$ref: '#/components/schemas/Redemption'}
+    Payoff:
+      type: object
+      required: [contract_id, as_of, amount, overdue, penalty, principal_remaining, accrued_interest, buyout]
+      properties:
+        contract_id: {type: string, format: uuid}
+        as_of: {type: string, format: date}
+        amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        overdue: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        penalty: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        principal_remaining: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        accrued_interest: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        buyout: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    PaymentRequest:
+      type: object
+      required: [amount, received_at, source]
+      properties:
+        amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        received_at: {type: string, format: date}
+        source: {$ref: '#/components/schemas/PaymentSource'}
+        external_ref: {type: string, minLength: 1, maxLength: 100, description: Идентификатор платежа во внешней системе, ключ дедупликации.}
+        kind: {$ref: '#/components/schemas/PaymentKind'}
+    AllocationLine:
+      type: object
+      description: Часть оплаты, отнесённая на платёж графика; installment 0 означает выкупной платёж.
+      required: [installment, penalty, interest, principal]
+      properties:
+        installment: {type: integer, minimum: 0}
+        penalty: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        interest: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        principal: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+    Payment:
+      type: object
+      required: [id, contract_id, amount, received_at, source, kind, allocation, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        contract_id: {type: string, format: uuid}
+        amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        received_at: {type: string, format: date}
+        source: {$ref: '#/components/schemas/PaymentSource'}
+        external_ref: {type: string}
+        kind: {$ref: '#/components/schemas/PaymentKind'}
+        allocation:
+          type: array
+          items: {$ref: '#/components/schemas/AllocationLine'}
+        created_at: {type: string, format: date-time}
+    PaymentList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Payment'}
+    ImportItem:
+      type: object
+      required: [contract_id, amount, received_at, external_ref]
+      properties:
+        contract_id: {type: string, format: uuid}
+        amount: {$ref: '../../common/v1/common.yaml#/components/schemas/Money'}
+        received_at: {type: string, format: date}
+        external_ref: {type: string, minLength: 1, maxLength: 100}
+    ImportRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items: {$ref: '#/components/schemas/ImportItem'}
+    ImportOutcome:
+      description: Итог обработки строки.
+      type: string
+      enum: [applied, duplicate, rejected]
+      x-enum-varnames: [ImportOutcomeApplied, ImportOutcomeDuplicate, ImportOutcomeRejected]
+    ImportRowResult:
+      type: object
+      required: [external_ref, contract_id, outcome]
+      properties:
+        external_ref: {type: string}
+        contract_id: {type: string, format: uuid}
+        outcome: {$ref: '#/components/schemas/ImportOutcome'}
+        payment_id: {type: string, format: uuid}
+        error_code: {type: string}
+        error: {type: string}
+    ImportResult:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ImportRowResult'}

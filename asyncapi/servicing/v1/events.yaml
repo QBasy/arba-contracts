@@ -1,0 +1,48 @@
+asyncapi: 3.0.0
+info:
+  title: Arba Servicing events
+  version: 1.0.0
+defaultContentType: application/json
+channels:
+  contractOpened:
+    address: arba.servicing.v1.contract.opened
+    messages:
+      contractOpened: {$ref: '#/components/messages/ContractOpened'}
+  paymentReceived:
+    address: arba.servicing.v1.payment.received
+    messages:
+      paymentReceived: {$ref: '#/components/messages/PaymentReceived'}
+  contractClosed:
+    address: arba.servicing.v1.contract.closed
+    messages:
+      contractClosed: {$ref: '#/components/messages/ContractClosed'}
+operations:
+  publishContractOpened:
+    action: send
+    channel: {$ref: '#/channels/contractOpened'}
+  publishPaymentReceived:
+    action: send
+    channel: {$ref: '#/channels/paymentReceived'}
+  publishContractClosed:
+    action: send
+    channel: {$ref: '#/channels/contractClosed'}
+components:
+  messages:
+    ContractOpened:
+      headers:
+        $ref: '#/components/schemas/Headers'
+      payload: {$ref: 'schemas.yaml#/components/schemas/ContractOpened'}
+    PaymentReceived:
+      headers:
+        $ref: '#/components/schemas/Headers'
+      payload: {$ref: 'schemas.yaml#/components/schemas/PaymentReceived'}
+    ContractClosed:
+      headers:
+        $ref: '#/components/schemas/Headers'
+      payload: {$ref: 'schemas.yaml#/components/schemas/ContractClosed'}
+  schemas:
+    Headers:
+      type: object
+      properties:
+        Arba-Key: {type: string, description: Ключ дедупликации и порядка.}
+        Arba-Created-At: {type: string, format: date-time}
