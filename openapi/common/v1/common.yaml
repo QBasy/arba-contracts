@@ -53,6 +53,45 @@ components:
       properties:
         next_cursor: {type: string, description: Курсор следующей страницы.}
         has_more: {type: boolean, description: Есть ли следующая страница.}
+    AuditActor:
+      type: object
+      description: Кто совершил действие.
+      required: [kind, subject]
+      properties:
+        kind: {type: string, description: Вид исполнителя - роль из токена (client, manager, underwriter) или system., examples: [manager]}
+        subject: {type: string, description: Идентификатор исполнителя (sub токена).}
+    AuditEntry:
+      type: object
+      description: Запись журнала аудита. Записи только добавляются и не изменяются.
+      required: [id, at, actor, action, entity_type, entity_id]
+      properties:
+        id: {type: string, format: uuid}
+        at: {type: string, format: date-time, description: Время действия.}
+        actor:
+          $ref: '#/components/schemas/AuditActor'
+        action: {type: string, description: Действие, например application.submit., examples: [application.submit]}
+        entity_type: {type: string, examples: [application]}
+        entity_id: {type: string}
+        before:
+          type: object
+          additionalProperties: true
+          description: Состояние до действия; нет у создания.
+        after:
+          type: object
+          additionalProperties: true
+          description: Состояние после действия. Персональные данные не хранятся.
+        request_id: {type: string, description: Идентификатор запроса, в рамках которого сделано действие.}
+    AuditPage:
+      type: object
+      description: Страница журнала аудита, новые записи первыми.
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEntry'
+        page:
+          $ref: '#/components/schemas/PageInfo'
   headers:
     RequestID:
       description: Идентификатор запроса; принимается от клиента или генерируется.
@@ -78,6 +117,31 @@ components:
       in: query
       description: Курсор из page.next_cursor предыдущего ответа.
       schema: {type: string}
+    AuditEntityType:
+      name: entity_type
+      in: query
+      description: Фильтр по типу сущности.
+      schema: {type: string}
+    AuditEntityID:
+      name: entity_id
+      in: query
+      description: Фильтр по идентификатору сущности; вместе с entity_type даёт историю одной сущности.
+      schema: {type: string}
+    AuditAction:
+      name: action
+      in: query
+      description: Фильтр по действию.
+      schema: {type: string}
+    AuditFrom:
+      name: from
+      in: query
+      description: Не раньше этого времени (включительно).
+      schema: {type: string, format: date-time}
+    AuditTo:
+      name: to
+      in: query
+      description: Строго раньше этого времени.
+      schema: {type: string, format: date-time}
     Limit:
       name: limit
       in: query

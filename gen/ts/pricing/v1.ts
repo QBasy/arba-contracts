@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/v1/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Журнал аудита
+         * @description Записи журнала тенанта, новые первыми. Только чтение; записи не изменяются и не удаляются.
+         */
+        get: operations["listAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/products": {
         parameters: {
             query?: never;
@@ -286,6 +306,57 @@ export interface components {
             /** @description Ошибки по полям. */
             errors?: components["schemas"]["FieldError"][];
         };
+        /** @description Кто совершил действие. */
+        AuditActor: {
+            /**
+             * @description Вид исполнителя - роль из токена (client
+             * @example manager
+             */
+            kind: string;
+            /** @description Идентификатор исполнителя (sub токена). */
+            subject: string;
+        };
+        /** @description Запись журнала аудита. Записи только добавляются и не изменяются. */
+        AuditEntry: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: date-time
+             * @description Время действия.
+             */
+            at: string;
+            actor: components["schemas"]["AuditActor"];
+            /**
+             * @description Действие
+             * @example application.submit
+             */
+            action: string;
+            /** @example application */
+            entity_type: string;
+            entity_id: string;
+            /** @description Состояние до действия; нет у создания. */
+            before?: {
+                [key: string]: unknown;
+            };
+            /** @description Состояние после действия. Персональные данные не хранятся. */
+            after?: {
+                [key: string]: unknown;
+            };
+            /** @description Идентификатор запроса */
+            request_id?: string;
+        };
+        /** @description Состояние курсорной пагинации. */
+        PageInfo: {
+            /** @description Курсор следующей страницы. */
+            next_cursor?: string;
+            /** @description Есть ли следующая страница. */
+            has_more: boolean;
+        };
+        /** @description Страница журнала аудита, новые записи первыми. */
+        AuditPage: {
+            items: components["schemas"]["AuditEntry"][];
+            page: components["schemas"]["PageInfo"];
+        };
         /**
          * @description Код валюты ISO 4217.
          * @enum {string}
@@ -396,6 +467,20 @@ export interface components {
     parameters: {
         /** @description Идентификатор версии продукта. */
         ProductID: string;
+        /** @description Курсор из page.next_cursor предыдущего ответа. */
+        Cursor: string;
+        /** @description Размер страницы. */
+        Limit: number;
+        /** @description Фильтр по типу сущности. */
+        AuditEntityType: string;
+        /** @description Фильтр по идентификатору сущности; вместе с entity_type даёт историю одной сущности. */
+        AuditEntityID: string;
+        /** @description Фильтр по действию. */
+        AuditAction: string;
+        /** @description Не раньше этого времени (включительно). */
+        AuditFrom: string;
+        /** @description Строго раньше этого времени. */
+        AuditTo: string;
         /** @description Ключ повтора; тот же ключ с тем же телом вернёт сохранённый ответ. */
         IdempotencyKey: string;
         /** @description Ожидаемая версия ресурса (значение ETag). При несовпадении — 412. */
@@ -412,6 +497,45 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listAudit: {
+        parameters: {
+            query?: {
+                /** @description Курсор из page.next_cursor предыдущего ответа. */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Размер страницы. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Фильтр по типу сущности. */
+                entity_type?: components["parameters"]["AuditEntityType"];
+                /** @description Фильтр по идентификатору сущности; вместе с entity_type даёт историю одной сущности. */
+                entity_id?: components["parameters"]["AuditEntityID"];
+                /** @description Фильтр по действию. */
+                action?: components["parameters"]["AuditAction"];
+                /** @description Не раньше этого времени (включительно). */
+                from?: components["parameters"]["AuditFrom"];
+                /** @description Строго раньше этого времени. */
+                to?: components["parameters"]["AuditTo"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница журнала. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            default: components["responses"]["Problem"];
+        };
+    };
     listProducts: {
         parameters: {
             query?: {

@@ -8,9 +8,36 @@ servers:
 security:
   - bearer: []
 tags:
+  - name: audit
+    description: Журнал аудита.
   - name: applications
     description: Жизненный цикл заявки.
 paths:
+  /v1/audit:
+    get:
+      operationId: listAudit
+      tags: [audit]
+      summary: Журнал аудита
+      description: Записи журнала тенанта, новые первыми. Только чтение; записи не изменяются и не удаляются.
+      x-required-roles: [auditor]
+      parameters:
+        - $ref: '../../common/v1/common.yaml#/components/parameters/Cursor'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/Limit'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/AuditEntityType'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/AuditEntityID'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/AuditAction'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/AuditFrom'
+        - $ref: '../../common/v1/common.yaml#/components/parameters/AuditTo'
+      responses:
+        '200':
+          description: Страница журнала.
+          content:
+            application/json:
+              schema: {$ref: '../../common/v1/common.yaml#/components/schemas/AuditPage'}
+        '400': {$ref: '../../common/v1/common.yaml#/components/responses/BadRequest'}
+        '401': {$ref: '../../common/v1/common.yaml#/components/responses/Unauthorized'}
+        '403': {$ref: '../../common/v1/common.yaml#/components/responses/Forbidden'}
+        default: {$ref: '../../common/v1/common.yaml#/components/responses/Problem'}
   /v1/applications:
     post:
       operationId: createApplication

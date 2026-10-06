@@ -57,6 +57,50 @@ export interface components {
             /** @description Есть ли следующая страница. */
             has_more: boolean;
         };
+        /** @description Кто совершил действие. */
+        AuditActor: {
+            /**
+             * @description Вид исполнителя - роль из токена (client
+             * @example manager
+             */
+            kind: string;
+            /** @description Идентификатор исполнителя (sub токена). */
+            subject: string;
+        };
+        /** @description Запись журнала аудита. Записи только добавляются и не изменяются. */
+        AuditEntry: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: date-time
+             * @description Время действия.
+             */
+            at: string;
+            actor: components["schemas"]["AuditActor"];
+            /**
+             * @description Действие
+             * @example application.submit
+             */
+            action: string;
+            /** @example application */
+            entity_type: string;
+            entity_id: string;
+            /** @description Состояние до действия; нет у создания. */
+            before?: {
+                [key: string]: unknown;
+            };
+            /** @description Состояние после действия. Персональные данные не хранятся. */
+            after?: {
+                [key: string]: unknown;
+            };
+            /** @description Идентификатор запроса */
+            request_id?: string;
+        };
+        /** @description Страница журнала аудита, новые записи первыми. */
+        AuditPage: {
+            items: components["schemas"]["AuditEntry"][];
+            page: components["schemas"]["PageInfo"];
+        };
     };
     responses: {
         /** @description Ошибка в формате Problem Details. */
@@ -147,6 +191,16 @@ export interface components {
         IdempotencyKey: string;
         /** @description Курсор из page.next_cursor предыдущего ответа. */
         Cursor: string;
+        /** @description Фильтр по типу сущности. */
+        AuditEntityType: string;
+        /** @description Фильтр по идентификатору сущности; вместе с entity_type даёт историю одной сущности. */
+        AuditEntityID: string;
+        /** @description Фильтр по действию. */
+        AuditAction: string;
+        /** @description Не раньше этого времени (включительно). */
+        AuditFrom: string;
+        /** @description Строго раньше этого времени. */
+        AuditTo: string;
         /** @description Размер страницы. */
         Limit: number;
     };

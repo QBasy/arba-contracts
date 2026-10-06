@@ -434,6 +434,30 @@ type SelectVehicleParams struct {
 	IfMatch *externalRef0.IfMatch `json:"If-Match,omitempty"`
 }
 
+// ListAuditParams defines parameters for ListAudit.
+type ListAuditParams struct {
+	// Cursor Курсор из page.next_cursor предыдущего ответа.
+	Cursor *externalRef0.Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Limit Размер страницы.
+	Limit *externalRef0.Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// EntityType Фильтр по типу сущности.
+	EntityType *externalRef0.AuditEntityType `form:"entity_type,omitempty" json:"entity_type,omitempty"`
+
+	// EntityId Фильтр по идентификатору сущности; вместе с entity_type даёт историю одной сущности.
+	EntityId *externalRef0.AuditEntityID `form:"entity_id,omitempty" json:"entity_id,omitempty"`
+
+	// Action Фильтр по действию.
+	Action *externalRef0.AuditAction `form:"action,omitempty" json:"action,omitempty"`
+
+	// From Не раньше этого времени (включительно).
+	From *externalRef0.AuditFrom `form:"from,omitempty" json:"from,omitempty"`
+
+	// To Строго раньше этого времени.
+	To *externalRef0.AuditTo `form:"to,omitempty" json:"to,omitempty"`
+}
+
 // AttachApplicantJSONRequestBody defines body for AttachApplicant for application/json ContentType.
 type AttachApplicantJSONRequestBody = AttachApplicantRequest
 
@@ -710,6 +734,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
 	SelectVehicle(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAudit Журнал аудита
+	//
+	// Записи журнала тенанта, новые первыми. Только чтение; записи не изменяются и не удаляются.
+	//
+	// Corresponds with GET /v1/audit (the `ListAudit` operationId).
+	ListAudit(ctx context.Context, params *ListAuditParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // ListApplications Список заявок
@@ -1104,6 +1135,23 @@ func (c *Client) SelectVehicleWithBody(ctx context.Context, id ApplicationID, pa
 // Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
 func (c *Client) SelectVehicle(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSelectVehicleRequest(c.Server, id, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAudit Журнал аудита
+//
+// Записи журнала тенанта, новые первыми. Только чтение; записи не изменяются и не удаляются.
+//
+// Corresponds with GET /v1/audit (the `ListAudit` operationId).
+func (c *Client) ListAudit(ctx context.Context, params *ListAuditParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAuditRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1998,6 +2046,132 @@ func NewSelectVehicleRequestWithBody(server string, id ApplicationID, params *Se
 	return req, nil
 }
 
+// NewListAuditRequest constructs an http.Request for the ListAudit method
+func NewListAuditRequest(server string, params *ListAuditParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/audit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EntityType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "entity_type", *params.EntityType, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EntityId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "entity_id", *params.EntityId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Action != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "action", *params.Action, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -2239,6 +2413,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /v1/applications/{id}/vehicle (the `SelectVehicle` operationId).
 	SelectVehicleWithResponse(ctx context.Context, id ApplicationID, params *SelectVehicleParams, body SelectVehicleJSONRequestBody, reqEditors ...RequestEditorFn) (*SelectVehicleResponse, error)
+
+	// ListAuditWithResponse Журнал аудита
+	//
+	// Записи журнала тенанта, новые первыми. Только чтение; записи не изменяются и не удаляются.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/audit (the `ListAudit` operationId).
+	ListAuditWithResponse(ctx context.Context, params *ListAuditParams, reqEditors ...RequestEditorFn) (*ListAuditResponse, error)
 }
 
 // ListApplicationsResponse400Headers the declared response headers of an HTTP 400 response for ListApplications
@@ -4452,6 +4635,103 @@ func (r SelectVehicleResponse) ContentType() string {
 	return ""
 }
 
+// ListAuditResponse400Headers the declared response headers of an HTTP 400 response for ListAudit
+type ListAuditResponse400Headers struct {
+	XRequestID *string
+}
+
+// ListAuditResponse401Headers the declared response headers of an HTTP 401 response for ListAudit
+type ListAuditResponse401Headers struct {
+	XRequestID *string
+}
+
+// ListAuditResponse403Headers the declared response headers of an HTTP 403 response for ListAudit
+type ListAuditResponse403Headers struct {
+	XRequestID *string
+}
+
+// ListAuditResponseDefaultHeaders the declared response headers of an HTTP default response for ListAudit
+type ListAuditResponseDefaultHeaders struct {
+	XRequestID *string
+}
+
+type ListAuditResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *externalRef0.AuditPage
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *externalRef0.BadRequest
+	// ApplicationproblemJSON401 the response for an HTTP 401 `application/problem+json` response
+	ApplicationproblemJSON401 *externalRef0.Unauthorized
+	// ApplicationproblemJSON403 the response for an HTTP 403 `application/problem+json` response
+	ApplicationproblemJSON403 *externalRef0.Forbidden
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *externalRef0.Problem
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *ListAuditResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *ListAuditResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *ListAuditResponse403Headers
+	// HeadersDefault the parsed response headers for an HTTP default response
+	HeadersDefault *ListAuditResponseDefaultHeaders
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAuditResponse) GetJSON200() *externalRef0.AuditPage {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r ListAuditResponse) GetApplicationproblemJSON400() *externalRef0.BadRequest {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON401 returns the response for an HTTP 401 `application/problem+json` response
+func (r ListAuditResponse) GetApplicationproblemJSON401() *externalRef0.Unauthorized {
+	return r.ApplicationproblemJSON401
+}
+
+// GetApplicationproblemJSON403 returns the response for an HTTP 403 `application/problem+json` response
+func (r ListAuditResponse) GetApplicationproblemJSON403() *externalRef0.Forbidden {
+	return r.ApplicationproblemJSON403
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r ListAuditResponse) GetApplicationproblemJSONDefault() *externalRef0.Problem {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAuditResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAuditResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAuditResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAuditResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // ListApplicationsWithResponse Список заявок
 //
 // Заявки тенанта, новые первыми; пагинация курсором.
@@ -4780,6 +5060,21 @@ func (c *ClientWithResponses) SelectVehicleWithResponse(ctx context.Context, id 
 		return nil, err
 	}
 	return ParseSelectVehicleResponse(rsp)
+}
+
+// ListAuditWithResponse Журнал аудита
+//
+// Записи журнала тенанта, новые первыми. Только чтение; записи не изменяются и не удаляются.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/audit (the `ListAudit` operationId).
+func (c *ClientWithResponses) ListAuditWithResponse(ctx context.Context, params *ListAuditParams, reqEditors ...RequestEditorFn) (*ListAuditResponse, error) {
+	rsp, err := c.ListAudit(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAuditResponse(rsp)
 }
 
 // ParseListApplicationsResponse parses an HTTP response from a ListApplicationsWithResponse call
@@ -7176,6 +7471,103 @@ func ParseSelectVehicleResponse(rsp *http.Response) (*SelectVehicleResponse, err
 	return response, nil
 }
 
+// ParseListAuditResponse parses an HTTP response from a ListAuditWithResponse call
+func ParseListAuditResponse(rsp *http.Response) (*ListAuditResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAuditResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.AuditPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest externalRef0.BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest externalRef0.Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest externalRef0.Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.Problem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers ListAuditResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers ListAuditResponse401Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers ListAuditResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case true:
+		var headers ListAuditResponseDefaultHeaders
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.HeadersDefault = &headers
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// ListApplications Список заявок
@@ -7223,6 +7615,9 @@ type ServerInterface interface {
 	// SelectVehicle Выбрать автомобиль
 	// (PUT /v1/applications/{id}/vehicle)
 	SelectVehicle(c fiber.Ctx, id ApplicationID, params SelectVehicleParams) error
+	// ListAudit Журнал аудита
+	// (GET /v1/audit)
+	ListAudit(c fiber.Ctx, params ListAuditParams) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -8075,6 +8470,85 @@ func (siw *ServerInterfaceWrapper) SelectVehicle(c fiber.Ctx) error {
 	return handler(c)
 }
 
+// ListAudit operation middleware
+func (siw *ServerInterfaceWrapper) ListAudit(c fiber.Ctx) error {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAuditParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", query, &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter cursor: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", query, &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter limit: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "entity_type" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "entity_type", query, &params.EntityType, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter entity_type: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "entity_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "entity_id", query, &params.EntityId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter entity_id: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "action" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "action", query, &params.Action, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter action: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", query, &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter from: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", query, &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter to: %w", err).Error())
+	}
+
+	handler := func(c fiber.Ctx) error {
+		return siw.Handler.ListAudit(c, params)
+	}
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		m := siw.HandlerMiddlewares[i]
+		next := handler
+		handler = func(c fiber.Ctx) error {
+			return m(c, next)
+		}
+	}
+
+	return handler(c)
+}
+
 // FiberServerOptions provides options for the Fiber server.
 type FiberServerOptions struct {
 	BaseURL            string
@@ -8097,6 +8571,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	for _, m := range options.Middlewares {
 		router.Use(fiber.Handler(m))
 	}
+
+	router.Get(options.BaseURL+"/v1/audit", wrapper.ListAudit)
 
 	router.Get(options.BaseURL+"/v1/applications", wrapper.ListApplications)
 
